@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting John Deere...</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;padding:24px}
+  .card{background:#fff;border-radius:16px;padding:32px 24px;text-align:center;max-width:340px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .icon{font-size:48px;margin-bottom:16px}
+  h2{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:8px}
+  p{font-size:15px;color:#666;line-height:1.5}
+  .spinner{width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#1D9E75;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{color:#A32D2D}
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="spinner"></div>
+  <h2>Connecting John Deere</h2>
+  <p>Exchanging credentials, please wait...</p>
+</div>
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+  const card = document.getElementById('card');
+
+  if (error) {
+    card.innerHTML = `<div class="icon">❌</div><h2 class="err">Connection cancelled</h2><p>${error}</p><p style="margin-top:16px;font-size:13px;color:#999">You can close this and try again from the app.</p>`;
+    return;
+  }
+
+  if (!code) {
+    card.innerHTML = `<div class="icon">❌</div><h2 class="err">Missing auth code</h2><p>Something went wrong with the John Deere redirect.</p>`;
+    return;
+  }
+
+  try {
+    const codeVerifier = localStorage.getItem('jd_code_verifier');
+    const res = await fetch('/.netlify/functions/jd-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, grant_type: 'authorization_code', code_verifier: codeVerifier })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(JSON.stringify(data));
+    }
+
+    // Store tokens in localStorage for the main app
+    localStorage.setItem('jd_access_token', data.access_token);
+    localStorage.setItem('jd_refresh_token', data.refresh_token || '');
+    localStorage.setItem('jd_token_expiry', Date.now() + (data.expires_in * 1000));
+    localStorage.setItem('jd_connected', 'true');
+
+    card.innerHTML = `<div class="icon">✅</div><h2 style="color:#1D9E75">Almost there!</h2><p>Now you need to select which organizations Field Scout can access.</p><p style="margin-top:12px;font-size:13px;color:#666">Redirecting to John Deere organization selection...</p>`;
+
+    // JD requires a separate org connection step
+    setTimeout(() => {
+      window.location.href = `https://connections.deere.com/connections/0oau9sokmtlHdGUC15d7/select-organizations?redirect_uri=https://willowy-faloodeh-897608.netlify.app`;
+    }, 2000);
+
+  } catch (err) {
+    card.innerHTML = `<div class="icon">❌</div><h2 class="err">Connection failed</h2><p style="font-size:12px;word-break:break-all;background:#f5f5f5;padding:8px;border-radius:6px;text-align:left">${err.message}</p><p style="margin-top:16px"><a href="/" style="color:#1D9E75;font-weight:600">Back to Field Scout</a></p>`;
+  }
+})();
+</script>
+</body>
+</html>
