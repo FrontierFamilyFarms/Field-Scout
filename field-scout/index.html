@@ -194,6 +194,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="sdot" id="sdot"></div>
     <button class="ibtn" onclick="showScreen('screen-map')">Map</button>
     <button class="ibtn" onclick="showScreen('screen-fields')">Fields</button>
+    <button class="ibtn" onclick="showScreen('screen-analytics')">📊</button>
     <button class="ibtn" onclick="showScreen('screen-jd')" id="jd-home-btn" title="John Deere">🚜</button>
   </div>
   <div class="offbanner" id="offbanner2"></div>
@@ -407,6 +408,47 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
 </div>
 
+<!-- ===== ANALYTICS DASHBOARD ===== -->
+<div class="screen" id="screen-analytics">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Analytics</h2>
+    <button class="ibtn" onclick="analyticsRefresh()">↺</button>
+  </div>
+  <div class="scroll" style="padding-bottom:24px">
+
+    <!-- AI Chat -->
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div id="ai-messages" style="min-height:60px;max-height:280px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="ai-input" placeholder="Ask about your fields, yields, products..." style="flex:1;font-size:14px" onkeydown="if(event.key==='Enter')askAI()">
+        <button class="btn btn-p btn-sm" onclick="askAI()" id="ai-btn">Ask</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap" id="ai-suggestions">
+        <button class="btn btn-sm" style="font-size:12px;padding:6px 10px" onclick="askAIQuick('Which fields had the most harvest operations?')">Top harvest fields</button>
+        <button class="btn btn-sm" style="font-size:12px;padding:6px 10px" onclick="askAIQuick('What products were applied most often?')">Top products</button>
+        <button class="btn btn-sm" style="font-size:12px;padding:6px 10px" onclick="askAIQuick('Show me seeding history by year')">Seeding by year</button>
+        <button class="btn btn-sm" style="font-size:12px;padding:6px 10px" onclick="askAIQuick('Which fields have the most data?')">Field activity</button>
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="sl">Operation summary</div>
+    <div id="analytics-stats" style="padding:0 16px 8px;display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+
+    <!-- Charts -->
+    <div class="sl">Operations by year</div>
+    <div id="analytics-year-chart" style="padding:0 16px 16px"></div>
+
+    <div class="sl">Operations by field</div>
+    <div id="analytics-field-chart" style="padding:0 16px 16px"></div>
+
+    <div class="sl">Recent operations</div>
+    <div id="analytics-recent" style="padding:0 0 16px"></div>
+
+  </div>
+</div>
+
 <!-- ===== JD CONNECT SCREEN ===== -->
 <div class="screen" id="screen-jd">
   <div class="topbar">
@@ -614,6 +656,7 @@ function showScreen(id) {
   if (id === 'screen-log') renderLog();
   if (id === 'screen-map') initMap();
   if (id === 'screen-jd') initJDScreen();
+  if (id === 'screen-analytics') initAnalytics();
 }
 
 function showAddMenu() {
@@ -1550,6 +1593,242 @@ function guessCropFromJD(field) {
   if (crop.includes('soy')) return 'soybeans';
   if (crop.includes('wheat')) return 'wheat';
   return 'corn';
+}
+
+// ── ANALYTICS ────────────────────────────────────────────────────────────────
+let analyticsData = null;
+
+async function initAnalytics() {
+  await analyticsRefresh();
+}
+
+async function analyticsRefresh() {
+  try {
+    // Load summary stats
+    const [ops, fields] = await Promise.all([
+      sb.get('jd_operations', 'select=id,operation_type,start_date,field_name,crop,variety,product'),
+      sb.get('fields', 'select=id,name,acres')
+    ]);
+
+    analyticsData = { ops: ops || [], fields: fields || [] };
+
+    renderAnalyticsStats(analyticsData);
+    renderYearChart(analyticsData);
+    renderFieldChart(analyticsData);
+    renderRecentOps(analyticsData);
+
+    // Welcome message if first load
+    const msgs = document.getElementById('ai-messages');
+    if (!msgs.children.length) {
+      addAIMessage('assistant', `I have access to ${(ops||[]).length.toLocaleString()} operations across ${(fields||[]).length} fields going back to ${getEarliestYear(ops)}. Ask me anything about your operation!`);
+    }
+  } catch(e) {
+    console.error('Analytics load error:', e);
+    toast('Could not load analytics data');
+  }
+}
+
+function getEarliestYear(ops) {
+  if (!ops || !ops.length) return '—';
+  const years = ops.map(o => o.start_date ? new Date(o.start_date).getFullYear() : 9999).filter(y => y < 9999);
+  return years.length ? Math.min(...years) : '—';
+}
+
+function renderAnalyticsStats(data) {
+  const { ops } = data;
+  const byType = {};
+  ops.forEach(o => { byType[o.operation_type] = (byType[o.operation_type] || 0) + 1; });
+  const el = document.getElementById('analytics-stats');
+  const types = [
+    { key: 'harvest', label: 'Harvests', icon: '🌽' },
+    { key: 'seeding', label: 'Seeding passes', icon: '🌱' },
+    { key: 'application', label: 'Applications', icon: '💧' },
+    { key: 'tillage', label: 'Tillage passes', icon: '🚜' }
+  ];
+  el.innerHTML = types.map(t => `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center">
+      <div style="font-size:22px;margin-bottom:4px">${t.icon}</div>
+      <div style="font-size:22px;font-weight:700;color:var(--text)">${(byType[t.key]||0).toLocaleString()}</div>
+      <div style="font-size:12px;color:var(--text2)">${t.label}</div>
+    </div>`).join('');
+}
+
+function renderYearChart(data) {
+  const { ops } = data;
+  const byYear = {};
+  ops.forEach(o => {
+    if (!o.start_date) return;
+    const yr = new Date(o.start_date).getFullYear();
+    if (yr < 2000 || yr > 2030) return;
+    if (!byYear[yr]) byYear[yr] = { harvest:0, seeding:0, application:0, tillage:0 };
+    byYear[yr][o.operation_type] = (byYear[yr][o.operation_type] || 0) + 1;
+  });
+  const years = Object.keys(byYear).sort();
+  if (!years.length) return;
+  const maxVal = Math.max(...years.map(y => Object.values(byYear[y]).reduce((a,b)=>a+b,0)));
+  const el = document.getElementById('analytics-year-chart');
+  el.innerHTML = `<div style="overflow-x:auto"><div style="min-width:${years.length * 44}px">` +
+    `<div style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 0 4px">` +
+    years.map(yr => {
+      const total = Object.values(byYear[yr]).reduce((a,b)=>a+b,0);
+      const h = Math.round((total/maxVal)*110);
+      const h_har = Math.round((byYear[yr].harvest/total)*h);
+      const h_see = Math.round((byYear[yr].seeding/total)*h);
+      const h_app = Math.round((byYear[yr].application/total)*h);
+      const h_til = h - h_har - h_see - h_app;
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer" title="${yr}: ${total} ops" onclick="askAIQuick('Give me a breakdown of ${yr} operations')">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:2px">${total}</div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:1px">
+          <div style="height:${h_har}px;background:#1D9E75;border-radius:2px 2px 0 0"></div>
+          <div style="height:${h_see}px;background:#185FA5"></div>
+          <div style="height:${h_app}px;background:#BA7517"></div>
+          <div style="height:${Math.max(h_til,0)}px;background:#999;border-radius:0 0 2px 2px"></div>
+        </div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px;transform:rotate(-45deg);transform-origin:left;white-space:nowrap">${yr}</div>
+      </div>`;
+    }).join('') + `</div>` +
+    `<div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--text2)"><span style="display:inline-block;width:10px;height:10px;background:#1D9E75;border-radius:2px;margin-right:4px"></span>Harvest</span>
+      <span style="font-size:11px;color:var(--text2)"><span style="display:inline-block;width:10px;height:10px;background:#185FA5;border-radius:2px;margin-right:4px"></span>Seeding</span>
+      <span style="font-size:11px;color:var(--text2)"><span style="display:inline-block;width:10px;height:10px;background:#BA7517;border-radius:2px;margin-right:4px"></span>Application</span>
+      <span style="font-size:11px;color:var(--text2)"><span style="display:inline-block;width:10px;height:10px;background:#999;border-radius:2px;margin-right:4px"></span>Tillage</span>
+    </div></div></div>`;
+}
+
+function renderFieldChart(data) {
+  const { ops } = data;
+  const byField = {};
+  ops.forEach(o => {
+    if (!o.field_name) return;
+    byField[o.field_name] = (byField[o.field_name] || 0) + 1;
+  });
+  const sorted = Object.entries(byField).sort((a,b) => b[1]-a[1]).slice(0,15);
+  if (!sorted.length) return;
+  const max = sorted[0][1];
+  const el = document.getElementById('analytics-field-chart');
+  el.innerHTML = sorted.map(([name, count]) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer" onclick="askAIQuick('Tell me about the operation history for ${name}')">
+      <div style="font-size:13px;color:var(--text);width:120px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+      <div style="flex:1;background:var(--border);border-radius:4px;height:16px;overflow:hidden">
+        <div style="height:100%;background:var(--green);border-radius:4px;width:${Math.round((count/max)*100)}%"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);width:28px;text-align:right">${count}</div>
+    </div>`).join('');
+}
+
+function renderRecentOps(data) {
+  const { ops } = data;
+  const sorted = [...ops]
+    .filter(o => o.start_date)
+    .sort((a,b) => new Date(b.start_date) - new Date(a.start_date))
+    .slice(0, 20);
+  const el = document.getElementById('analytics-recent');
+  const typeIcons = { harvest:'🌽', seeding:'🌱', application:'💧', tillage:'🚜', other:'📋' };
+  el.innerHTML = sorted.map(o => {
+    const date = new Date(o.start_date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    const icon = typeIcons[o.operation_type] || '📋';
+    const detail = o.variety || o.product || o.crop || o.operation_type;
+    return `<div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:10px">
+      <div style="font-size:20px">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.field_name || '—'}</div>
+        <div style="font-size:12px;color:var(--text2)">${detail} · ${date}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
+function addAIMessage(role, text) {
+  const el = document.getElementById('ai-messages');
+  const isUser = role === 'user';
+  const div = document.createElement('div');
+  div.style.cssText = `max-width:85%;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.5;${
+    isUser
+      ? 'background:var(--green);color:#fff;align-self:flex-end;margin-left:auto'
+      : 'background:var(--bg2);border:1px solid var(--border);color:var(--text);align-self:flex-start'
+  }`;
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function askAIQuick(q) {
+  document.getElementById('ai-input').value = q;
+  askAI();
+}
+
+async function askAI() {
+  const input = document.getElementById('ai-input');
+  const btn = document.getElementById('ai-btn');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  addAIMessage('user', q);
+
+  try {
+    if (!analyticsData) await analyticsRefresh();
+    const { ops, fields } = analyticsData;
+
+    // Build data summary for AI context
+    const byType = {};
+    const byField = {};
+    const byYear = {};
+    const products = {};
+    const varieties = {};
+
+    ops.forEach(o => {
+      byType[o.operation_type] = (byType[o.operation_type] || 0) + 1;
+      if (o.field_name) byField[o.field_name] = (byField[o.field_name] || 0) + 1;
+      if (o.start_date) {
+        const yr = new Date(o.start_date).getFullYear();
+        if (yr >= 2000 && yr <= 2030) byYear[yr] = (byYear[yr] || 0) + 1;
+      }
+      if (o.product) products[o.product] = (products[o.product] || 0) + 1;
+      if (o.variety) varieties[o.variety] = (varieties[o.variety] || 0) + 1;
+    });
+
+    const topFields = Object.entries(byField).sort((a,b)=>b[1]-a[1]).slice(0,20);
+    const topProducts = Object.entries(products).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const topVarieties = Object.entries(varieties).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const yearSummary = Object.entries(byYear).sort((a,b)=>a[0]-b[0]);
+
+    const context = `You are an agronomic data analyst for Frontier Family Farms in southern Minnesota. 
+You have access to ${ops.length} field operations from ${getEarliestYear(ops)} to present across ${fields.length} fields.
+
+Operation counts by type: ${JSON.stringify(byType)}
+Operations by year: ${JSON.stringify(Object.fromEntries(yearSummary))}
+Top fields by activity: ${JSON.stringify(Object.fromEntries(topFields))}
+Top products applied: ${JSON.stringify(Object.fromEntries(topProducts))}
+Top varieties/hybrids seeded: ${JSON.stringify(Object.fromEntries(topVarieties))}
+Field list: ${fields.map(f => f.name + (f.acres ? ' ('+f.acres.toFixed(0)+' ac)' : '')).join(', ')}
+
+Answer the user's question concisely and agronomically. Use specific numbers from the data. Keep responses under 150 words.`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: context,
+        messages: [{ role: 'user', content: q }]
+      })
+    });
+
+    const data = await res.json();
+    const answer = data.content?.[0]?.text || 'Could not get a response.';
+    addAIMessage('assistant', answer);
+
+  } catch(e) {
+    addAIMessage('assistant', 'Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ask';
+  }
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
