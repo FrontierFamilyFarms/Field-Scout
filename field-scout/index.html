@@ -1129,7 +1129,22 @@ async function renderLog() {
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 async function exportCSV() {
   toast('Building export...');
+  try {async function jdAPI(path, method = 'GET', body = null) {
+  const token = await jdGetToken();
+  const res = await fetch('/.netlify/functions/jd-api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, method, body, token })
+  });
+  const text = await res.text();
   try {
+    const data = JSON.parse(text);
+    if (!res.ok) throw new Error(data.error || `JD API error ${res.status}`);
+    return data;
+  } catch(e) {
+    throw new Error('API error: ' + text.slice(0, 200));
+  }
+}
     const [scouts, allObs, soils, tissues, drains] = await Promise.all([
       sb.get('scout_points'), sb.get('observations'),
       sb.get('soil_samples'), sb.get('tissue_samples'), sb.get('drainage_obs')
