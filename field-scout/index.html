@@ -1240,13 +1240,10 @@ async function jdAPIAll(path, progressCallback = null) {
     const values = data.values || [];
     allValues = [...allValues, ...values];
     if (progressCallback) progressCallback(allValues.length);
-    // Find next page link
+    // Find next page link — pass full URL directly
     const nextLink = (data.links || []).find(l => l.rel === 'nextPage');
-    if (nextLink) {
-      try {
-        const url = new URL(nextLink.uri);
-        nextPath = url.pathname + url.search;
-      } catch { nextPath = null; }
+    if (nextLink && nextLink.uri) {
+      nextPath = nextLink.uri; // pass full URL, proxy handles it
     } else {
       nextPath = null;
     }
