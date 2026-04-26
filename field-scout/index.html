@@ -1129,22 +1129,7 @@ async function renderLog() {
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 async function exportCSV() {
   toast('Building export...');
-  try {async function jdAPI(path, method = 'GET', body = null) {
-  const token = await jdGetToken();
-  const res = await fetch('/.netlify/functions/jd-api', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path, method, body, token })
-  });
-  const text = await res.text();
   try {
-    const data = JSON.parse(text);
-    if (!res.ok) throw new Error(data.error || `JD API error ${res.status}`);
-    return data;
-  } catch(e) {
-    throw new Error('API error: ' + text.slice(0, 200));
-  }
-}
     const [scouts, allObs, soils, tissues, drains] = await Promise.all([
       sb.get('scout_points'), sb.get('observations'),
       sb.get('soil_samples'), sb.get('tissue_samples'), sb.get('drainage_obs')
@@ -1245,6 +1230,33 @@ async function jdGetToken() {
   return localStorage.getItem('jd_access_token');
 }
 
+// Fetch all pages from a JD API endpoint automatically
+async function jdAPIAll(path, progressCallback = null) {
+  let allValues = [];
+  let nextPath = path;
+  let page = 1;
+  while (nextPath) {
+    const data = await jdAPI(nextPath);
+    const values = data.values || [];
+    allValues = [...allValues, ...values];
+    if (progressCallback) progressCallback(allValues.length);
+    // Find next page link
+    const nextLink = (data.links || []).find(l => l.rel === 'nextPage');
+    if (nextLink) {
+      try {
+        const url = new URL(nextLink.uri);
+        nextPath = url.pathname + url.search;
+      } catch { nextPath = null; }
+    } else {
+      nextPath = null;
+    }
+    page++;
+    // Safety limit — no endpoint should have more than 500 pages
+    if (page > 500) break;
+  }
+  return allValues;
+}
+
 async function jdAPI(path, method = 'GET', body = null) {
   const token = await jdGetToken();
   const res = await fetch('/.netlify/functions/jd-api', {
@@ -1261,7 +1273,6 @@ async function jdAPI(path, method = 'GET', body = null) {
     throw new Error('API error: ' + text.slice(0, 200));
   }
 }
-
 
 function initJDScreen() {
   const connected = jdIsConnected();
@@ -1285,10 +1296,9 @@ async function jdSyncFields() {
   fieldsEl.innerHTML = '';
 
   try {
-    // Step 1: Get organizations
+    // Step 1: Get all organizations
     toast('Fetching organizations...');
-    const orgsData = await jdAPI('/organizations');
-    const orgs = orgsData.values || [];
+    const orgs = await jdAPIAll('/organizations', count => toast(`Fetching organizations... (${count})`));
 
     if (!orgs.length) {
       fieldsEl.innerHTML = '<div class="empty">No organizations found in your Operations Center.</div>';
@@ -1298,15 +1308,17 @@ async function jdSyncFields() {
     orgsEl.innerHTML = `<div class="sl" style="padding-top:4px">Organizations (${orgs.length})</div>` +
       orgs.map(o => `<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text2)">🏢 ${o.name}</div>`).join('');
 
-    // Step 2: Get fields for each org
+    // Step 2: Get all fields for each org with pagination
     toast('Fetching fields...');
     let allJDFields = [];
     for (const org of orgs) {
       try {
         const orgId = org.id || org['@id']?.split('/').pop();
         if (!orgId) continue;
-        const fieldsData = await jdAPI(`/organizations/${orgId}/fields`);
-        const fields = fieldsData.values || [];
+        const fields = await jdAPIAll(
+          `/organizations/${orgId}/fields`,
+          count => toast(`Fetching fields... (${allJDFields.length + count} so far)`)
+        );
         fields.forEach(f => f._orgName = org.name);
         allJDFields = [...allJDFields, ...fields];
       } catch(e) {
