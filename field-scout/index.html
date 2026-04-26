@@ -1232,7 +1232,9 @@ async function jdGetToken() {
 
 async function jdAPI(path, method = 'GET', body = null) {
   const token = await jdGetToken();
-  const res = await fetch(`${JD_BASE}${path}`, {
+  // Use root discovery for base path, or construct full URL
+  const url = path.startsWith('http') ? path : `${JD_BASE}${path}`;
+  const res = await fetch(url, {
     method,
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -1242,10 +1244,13 @@ async function jdAPI(path, method = 'GET', body = null) {
     body: body ? JSON.stringify(body) : undefined
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `JD API error ${res.status}`);
+    const text = await res.text();
+    let err;
+    try { err = JSON.parse(text); } catch { err = { message: text.slice(0, 200) }; }
+    throw new Error(err.message || err.error || `JD API error ${res.status}: ${text.slice(0,100)}`);
   }
-  return res.json();
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { throw new Error('JD API returned non-JSON: ' + text.slice(0, 200)); }
 }
 
 function initJDScreen() {
