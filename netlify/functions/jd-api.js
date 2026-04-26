@@ -34,7 +34,13 @@ exports.handler = async (event) => {
   }
 
   try {
-    const url = path.startsWith('http') ? path : `${JD_BASE}${path}`;
+    // Handle both full URLs and paths
+    let url;
+    if (path.startsWith('http')) {
+      url = path;
+    } else {
+      url = `${JD_BASE}${path}`;
+    }
     
     const response = await fetch(url, {
       method,
