@@ -1,42 +1,1567 @@
--- Migration v3 — Add John Deere integration columns
--- Run this in your Supabase SQL Editor
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1D9E75">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Field Scout">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<title>Field Scout</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;background:#f5f5f5;color:#1a1a1a;overflow:hidden}
+:root{--green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--amber:#BA7517;--amber-bg:#FAEEDA;--red:#A32D2D;--red-bg:#FCEBEB;--blue:#185FA5;--blue-bg:#E6F1FB;--border:#e0e0e0;--bg:#fff;--bg2:#f8f8f8;--text:#1a1a1a;--text2:#666;--text3:#999;--r:12px;--rsm:8px}
+.app{max-width:520px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden;position:absolute;inset:0;background:var(--bg);z-index:1}
+.screen.active{display:flex;z-index:2}
+.topbar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;min-height:54px}
+.topbar h1{font-size:18px;font-weight:700;flex:1;color:var(--text)}
+.topbar h2{font-size:17px;font-weight:600;flex:1;color:var(--text)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.back{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text2);padding:2px 8px 2px 0;line-height:1}
+.ibtn{background:none;border:none;cursor:pointer;color:var(--green);font-size:14px;font-weight:600;padding:6px 8px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--bg);font-size:15px;font-weight:500;color:var(--text);cursor:pointer;font-family:inherit;transition:all 0.15s}
+.btn:active{transform:scale(0.97)}
+.btn-p{background:var(--green);border-color:var(--green);color:#fff}
+.btn-p:active{background:var(--green-dark)}
+.btn-w{width:100%}
+.btn-sm{font-size:13px;padding:8px 14px}
+.sl{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:16px 16px 8px}
+.fg{padding:12px 16px;border-bottom:1px solid var(--border)}
+.fl{font-size:13px;color:var(--text2);margin-bottom:6px;display:block;font-weight:500}
+.hint{font-weight:400;color:var(--text3);margin-left:4px;font-size:12px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rsm);font-size:15px;color:var(--text);background:var(--bg);font-family:inherit;appearance:none;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green);border-color:var(--green)}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
 
-alter table fields add column if not exists jd_field_id text;
-alter table fields add column if not exists jd_org_id text;
-alter table fields add column if not exists jd_org_name text;
-alter table fields add column if not exists boundary jsonb;
-alter table fields add column if not exists acres numeric;
+/* Auth */
+.auth-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.auth-logo{width:72px;height:72px;background:var(--green);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;font-size:36px}
+.auth-title{font-size:24px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.auth-sub{font-size:15px;color:var(--text2);margin-bottom:32px;text-align:center}
+.auth-form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.auth-switch{font-size:14px;color:var(--text2);text-align:center;margin-top:16px}
+.auth-switch span{color:var(--green);cursor:pointer;font-weight:600}
+.auth-err{font-size:13px;color:var(--red);text-align:center;padding:8px;background:var(--red-bg);border-radius:var(--rsm);display:none}
+.auth-err.show{display:block}
 
--- Field operations table (planting, harvest, application passes)
-create table if not exists jd_operations (
-  id uuid default gen_random_uuid() primary key,
-  field_id uuid references fields(id) on delete cascade,
-  field_name text,
-  jd_operation_id text unique,
-  operation_type text,  -- 'planting', 'harvest', 'application', 'tillage'
-  start_date timestamptz,
-  end_date timestamptz,
-  crop text,
-  variety text,
-  machine text,
-  area_applied numeric,
-  -- Planting specific
-  seeding_rate numeric,
-  -- Harvest specific
-  dry_yield numeric,
-  moisture numeric,
-  -- Application specific
-  product text,
-  rate numeric,
-  rate_unit text,
-  -- Raw JD data
-  raw jsonb,
-  created_at timestamptz default now()
-);
+/* Home */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px}
+.stat-card{background:var(--bg2);border-radius:var(--rsm);padding:12px 8px;text-align:center}
+.stat-num{font-size:22px;font-weight:700;color:var(--text)}
+.stat-num.g{color:var(--green)}.stat-num.r{color:var(--red)}.stat-num.b{color:var(--blue)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+.field-row{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;gap:12px}
+.field-row:active{background:var(--bg2)}
+.ficon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ficon.corn{background:#FAEEDA}.ficon.soybeans{background:#EAF3DE}.ficon.wheat{background:#F5F5DC}
+.fname{font-size:15px;font-weight:600;color:var(--text)}
+.fmeta{font-size:12px;color:var(--text2);margin-top:1px}
+.chev{color:var(--text3);font-size:20px;margin-left:auto}
+.fab{position:absolute;bottom:20px;left:16px;right:16px;background:var(--green);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(29,158,117,.3);font-family:inherit}
+.fab:active{background:var(--green-dark)}
+.empty{text-align:center;padding:48px 24px;color:var(--text3);font-size:15px;line-height:1.7}
 
-alter table jd_operations enable row level security;
-create policy "allow all jd_operations" on jd_operations for all using (true) with check (true);
+/* Bottom nav */
+.bnav{display:flex;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.bnavbtn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:inherit;color:var(--text3);font-size:10px;font-weight:500}
+.bnavbtn.active{color:var(--green)}
+.bnavbtn svg{width:22px;height:22px}
 
--- Index for fast field lookups
-create index if not exists jd_ops_field_idx on jd_operations(field_id);
-create index if not exists jd_ops_type_idx on jd_operations(operation_type);
+/* GPS */
+.gps-box{background:var(--bg2);border-radius:var(--rsm);padding:11px;display:flex;align-items:center;gap:10px;margin-top:6px}
+.gdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#ccc}
+.gdot.ok{background:var(--green)}.gdot.err{background:var(--red)}.gdot.loading{background:#FA9A27;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ginfo{flex:1;font-size:13px;color:var(--text2);line-height:1.4}
+.gcap{font-size:13px;padding:8px 13px;white-space:nowrap}
+
+/* Obs cards */
+.obs-card{background:var(--bg2);border-radius:var(--r);padding:13px;margin:8px 16px;border:1px solid var(--border)}
+.obs-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.obs-lbl{font-size:14px;font-weight:600;color:var(--text)}
+.obs-rm{background:none;border:none;cursor:pointer;color:var(--text3);font-size:24px;line-height:1;padding:0 2px}
+.ogrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ogrid .full{grid-column:1/-1}
+.ogrid select,.ogrid input{font-size:14px;padding:9px 10px}
+.ogrid select{padding-right:28px}
+.thr-row{display:flex;gap:6px;margin-top:2px}
+.thr{flex:1;padding:8px 4px;font-size:12px;font-weight:600;border:1px solid var(--border);border-radius:var(--rsm);background:var(--bg);cursor:pointer;color:var(--text2);font-family:inherit}
+.thr.below.a{background:var(--green-light);border-color:var(--green);color:var(--green-dark)}
+.thr.at.a{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+.thr.above.a{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.add-obs-row{display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap}
+.aob{font-size:14px;padding:9px 15px;border-radius:var(--rsm);border:1.5px dashed var(--border);background:var(--bg);cursor:pointer;color:var(--text2);font-family:inherit}
+.aob:active{background:var(--bg2)}
+.photo-preview{width:100%;max-height:160px;object-fit:cover;border-radius:var(--rsm);display:block;margin-top:6px}
+.photo-rm{font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0;display:block}
+.photo-btn{display:flex;align-items:center;gap:5px;font-size:13px;padding:8px 13px;color:var(--green);border-color:rgba(29,158,117,.4)}
+
+/* Nutrient grid */
+.ngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ngrid input{font-size:14px;padding:8px 10px}
+.ngrid .full{grid-column:1/-1}
+.ngrid-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:14px 16px 6px;border-top:1px solid var(--border);margin-top:4px}
+
+/* Log */
+.log-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.ltab{flex-shrink:0;padding:11px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ltab.active{color:var(--green);border-bottom-color:var(--green)}
+.log-item{padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.log-item:active{background:var(--bg2)}
+.litop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.lifn{font-size:15px;font-weight:600;color:var(--text)}
+.lidate{font-size:13px;color:var(--text3);white-space:nowrap}
+.ligps{font-size:12px;color:var(--text3);margin-top:2px}
+.litags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.ltag{font-size:11px;padding:3px 9px;border-radius:20px;background:#f0f0f0;color:var(--text2)}
+.ltag.flag{background:var(--red-bg);color:var(--red)}
+.ltag.soil{background:var(--amber-bg);color:var(--amber)}
+.ltag.tissue{background:var(--green-light);color:var(--green-dark)}
+.ltag.drain{background:var(--blue-bg);color:var(--blue)}
+.linote{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.5}
+
+/* MAP */
+#map-container{flex:1;position:relative;overflow:hidden}
+#map{position:absolute;inset:0}
+.map-controls{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.map-ctrl-btn{width:40px;height:40px;background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:18px}
+.layer-panel{position:absolute;top:12px;left:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;z-index:10;min-width:160px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.layer-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.layer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.layer-row:last-child{margin-bottom:0}
+.layer-name{font-size:13px;color:var(--text);font-weight:500}
+.toggle{width:36px;height:20px;background:#ccc;border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{left:18px}
+.map-bottom-card{position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:var(--r) var(--r) 0 0;padding:16px;transform:translateY(100%);transition:transform .3s;z-index:20;max-height:60vh;overflow-y:auto;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+.map-bottom-card.open{transform:translateY(0)}
+.mbc-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px}
+.mbc-type{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.mbc-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px}
+.mbc-sub{font-size:13px;color:var(--text2);margin-bottom:12px}
+.mbc-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:14px}
+.mbc-row:last-child{border:none}
+.mbc-k{color:var(--text2)}.mbc-v{font-weight:500;color:var(--text)}
+.locate-btn{position:absolute;bottom:20px;right:12px;width:44px;height:44px;background:var(--bg);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:20px;z-index:10}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.bg{background:var(--green-light);color:var(--green-dark)}
+.ba{background:var(--amber-bg);color:var(--amber)}
+.br{background:var(--red-bg);color:var(--red)}
+
+/* Sync / toast / offline */
+.sdot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0}
+.sdot.ok{background:var(--green)}.sdot.err{background:var(--red)}.sdot.sync{background:#FA9A27;animation:pulse 1s infinite}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;white-space:nowrap;max-width:90vw}
+.toast.show{opacity:1}
+.offbanner{background:var(--amber-bg);color:#633806;font-size:13px;font-weight:500;padding:7px 16px;text-align:center;display:none;flex-shrink:0}
+.offbanner.show{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="toast" id="toast"></div>
+<div class="offbanner" id="offbanner">Offline — data will sync when reconnected</div>
+
+<!-- ===== AUTH ===== -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-wrap">
+    <div class="auth-logo">🌱</div>
+    <div class="auth-title">Field Scout</div>
+    <div class="auth-sub" id="auth-sub">Sign in to your farm account</div>
+    <div class="auth-form">
+      <div class="auth-err" id="auth-err"></div>
+      <input type="email" id="auth-email" placeholder="Email address" autocomplete="email">
+      <input type="password" id="auth-pw" placeholder="Password" autocomplete="current-password">
+      <button class="btn btn-p btn-w" id="auth-btn" onclick="authSubmit()">Sign in</button>
+    </div>
+    <div class="auth-switch">Don't have an account? <span onclick="toggleAuth()">Create one</span></div>
+  </div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div class="screen" id="screen-home">
+  <div class="topbar">
+    <h1>Field Scout</h1>
+    <div class="sdot" id="sdot"></div>
+    <button class="ibtn" onclick="showScreen('screen-map')">Map</button>
+    <button class="ibtn" onclick="showScreen('screen-fields')">Fields</button>
+    <button class="ibtn" onclick="showScreen('screen-jd')" id="jd-home-btn" title="John Deere">🚜</button>
+  </div>
+  <div class="offbanner" id="offbanner2"></div>
+  <div class="scroll" style="padding-bottom:80px">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num g" id="s-fields">—</div><div class="stat-lbl">fields</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-scouts">—</div><div class="stat-lbl">scouts</div></div>
+      <div class="stat-card"><div class="stat-num r" id="s-flags">—</div><div class="stat-lbl">flags</div></div>
+      <div class="stat-card"><div class="stat-num b" id="s-samples">—</div><div class="stat-lbl">samples</div></div>
+    </div>
+    <div class="sl">fields</div>
+    <div id="home-fields"></div>
+    <div style="height:20px"></div>
+  </div>
+  <div style="position:relative;flex-shrink:0;height:72px">
+    <button class="fab" onclick="showAddMenu()">+ New entry</button>
+  </div>
+  <!-- Add menu -->
+  <div id="add-menu" style="display:none;position:absolute;bottom:72px;left:16px;right:16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);z-index:50;box-shadow:0 -4px 20px rgba(0,0,0,.12);padding:8px">
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-scout-setup')">🔍 Scouting point</button>
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-soil-setup')">🧪 Soil sample</button>
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-tissue-setup')">🌿 Tissue sample</button>
+    <button class="btn btn-w" style="justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-drain-setup')">💧 Drainage observation</button>
+  </div>
+</div>
+
+<!-- ===== MAP ===== -->
+<div class="screen" id="screen-map">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Field map</h2>
+    <button class="ibtn" onclick="exportCSV()">Export</button>
+  </div>
+  <div id="map-container">
+    <div id="map"></div>
+    <div class="layer-panel" id="layer-panel">
+      <div class="layer-title">Layers</div>
+      <div class="layer-row"><span class="layer-name">🔍 Scouting</span><button class="toggle on" id="tog-scout" onclick="toggleLayer('scout',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">🧪 Soil</span><button class="toggle on" id="tog-soil" onclick="toggleLayer('soil',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">🌿 Tissue</span><button class="toggle on" id="tog-tissue" onclick="toggleLayer('tissue',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">💧 Drainage</span><button class="toggle on" id="tog-drain" onclick="toggleLayer('drain',this)"></button></div>
+    </div>
+    <button class="locate-btn" onclick="locateMe()" title="Find my location">📍</button>
+    <div class="map-bottom-card" id="map-card">
+      <div class="mbc-handle"></div>
+      <div id="map-card-content"></div>
+      <button class="btn btn-sm" style="margin-top:12px;width:100%" onclick="closeMapCard()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOG ===== -->
+<div class="screen" id="screen-log">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Log</h2>
+    <button class="ibtn" onclick="exportCSV()">Export</button>
+  </div>
+  <div class="log-tabs">
+    <button class="ltab active" onclick="setLogTab('all',this)">All</button>
+    <button class="ltab" onclick="setLogTab('scout',this)">Scouting</button>
+    <button class="ltab" onclick="setLogTab('soil',this)">Soil</button>
+    <button class="ltab" onclick="setLogTab('tissue',this)">Tissue</button>
+    <button class="ltab" onclick="setLogTab('drain',this)">Drainage</button>
+    <button class="ltab" onclick="setLogTab('flags',this)">⚑ Flags</button>
+  </div>
+  <div class="scroll" id="log-list"></div>
+</div>
+
+<!-- ===== FIELDS ===== -->
+<div class="screen" id="screen-fields">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Fields</h2>
+  </div>
+  <div class="scroll">
+    <div id="fields-list"></div>
+    <div style="padding:16px;border-top:1px solid var(--border);background:var(--bg2)">
+      <div class="fl">Add new field</div>
+      <input type="text" id="nf-name" placeholder="Field name" style="margin-bottom:8px">
+      <select id="nf-crop" style="margin-bottom:10px">
+        <option value="corn">Corn</option>
+        <option value="soybeans">Soybeans</option>
+        <option value="wheat">Wheat</option>
+      </select>
+      <button class="btn btn-p btn-w" onclick="addField()">Add field</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCOUT SETUP ===== -->
+<div class="screen" id="screen-scout-setup">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Scouting point</h2>
+  </div>
+  <div class="scroll">
+    <div class="fg"><label class="fl">Field</label><select id="sc-field" onchange="onFieldChange('sc')"><option value="">— select —</option></select></div>
+    <div class="fg"><label class="fl">Date</label><input type="date" id="sc-date"></div>
+    <div class="fg"><label class="fl">GPS location</label><div class="gps-box"><div class="gdot" id="sc-gdot"></div><div class="ginfo" id="sc-ginfo">Tap capture</div><button class="btn btn-sm gcap" onclick="captureGPS('sc')">Capture</button></div></div>
+    <div class="fg"><label class="fl">Growth stage</label><select id="sc-stage"><option value="">— select field first —</option></select></div>
+    <div class="fg"><label class="fl">Stand count <span class="hint">plants/acre</span></label><input type="number" id="sc-stand" placeholder="e.g. 32000"></div>
+    <div class="sl">observations</div>
+    <div id="obs-list"></div>
+    <div class="add-obs-row">
+      <button class="aob" onclick="addObs('weed')">+ Weed</button>
+      <button class="aob" onclick="addObs('insect')">+ Insect</button>
+      <button class="aob" onclick="addObs('disease')">+ Disease</button>
+    </div>
+    <div class="fg"><label class="fl">Notes</label><textarea id="sc-notes" placeholder="Field conditions, anything notable..."></textarea></div>
+    <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="sc-save" onclick="saveScout()">Save scouting point</button></div>
+  </div>
+</div>
+
+<!-- ===== SOIL SETUP ===== -->
+<div class="screen" id="screen-soil-setup">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Soil sample</h2>
+  </div>
+  <div class="scroll">
+    <div class="fg"><label class="fl">Field</label><select id="sl-field"><option value="">— select —</option></select></div>
+    <div class="fg"><label class="fl">Date</label><input type="date" id="sl-date"></div>
+    <div class="fg"><label class="fl">GPS location</label><div class="gps-box"><div class="gdot" id="sl-gdot"></div><div class="ginfo" id="sl-ginfo">Tap capture</div><button class="btn btn-sm gcap" onclick="captureGPS('sl')">Capture</button></div></div>
+    <div class="fg"><label class="fl">Sample depth</label><select id="sl-depth"><option value="">—</option><option>0-6"</option><option>0-8"</option><option>6-24"</option><option>0-24"</option></select></div>
+    <div class="fg"><label class="fl">Lab name <span class="hint">optional</span></label><input type="text" id="sl-lab" placeholder="e.g. A&L Great Lakes"></div>
+    <div class="fg"><label class="fl">Sample ID <span class="hint">optional</span></label><input type="text" id="sl-sid" placeholder="Lab sample number"></div>
+    <div class="ngrid-label">Primary nutrients</div>
+    <div class="fg"><div class="ngrid">
+      <div><label class="fl" style="font-size:12px">pH</label><input type="number" step="0.1" id="sl-ph" placeholder="6.8"></div>
+      <div><label class="fl" style="font-size:12px">Buffer pH</label><input type="number" step="0.1" id="sl-bph" placeholder="6.9"></div>
+      <div><label class="fl" style="font-size:12px">Organic matter %</label><input type="number" step="0.1" id="sl-om" placeholder="3.2"></div>
+      <div><label class="fl" style="font-size:12px">CEC</label><input type="number" step="0.1" id="sl-cec" placeholder="18.4"></div>
+      <div><label class="fl" style="font-size:12px">Phosphorus (ppm)</label><input type="number" id="sl-p" placeholder="32"></div>
+      <div><label class="fl" style="font-size:12px">Potassium (ppm)</label><input type="number" id="sl-k" placeholder="185"></div>
+      <div><label class="fl" style="font-size:12px">Calcium (ppm)</label><input type="number" id="sl-ca" placeholder="2800"></div>
+      <div><label class="fl" style="font-size:12px">Magnesium (ppm)</label><input type="number" id="sl-mg" placeholder="320"></div>
+      <div><label class="fl" style="font-size:12px">Sulfur (ppm)</label><input type="number" id="sl-s" placeholder="12"></div>
+    </div></div>
+    <div class="ngrid-label">Base saturations %</div>
+    <div class="fg"><div class="ngrid">
+      <div><label class="fl" style="font-size:12px">Ca sat %</label><input type="number" step="0.1" id="sl-casat" placeholder="68"></div>
+      <div><label class="fl" style="font-size:12px">Mg sat %</label><input type="number" step="0.1" id="sl-mgsat" placeholder="14"></div>
+      <div><label class="fl" style="font-size:12px">K sat %</label><input type="number" step="0.1" id="sl-ksat" placeholder="3.2"></div>
+      <div><label class="fl" style="font-size:12px">H sat %</label><input type="number" step="0.1" id="sl-hsat" placeholder="12"></div>
+    </div></div>
+    <div class="ngrid-label">Micronutrients (ppm)</div>
+    <div class="fg"><div class="ngrid">
+      <div><label class="fl" style="font-size:12px">Zinc</label><input type="number" step="0.1" id="sl-zn" placeholder="1.2"></div>
+      <div><label class="fl" style="font-size:12px">Manganese</label><input type="number" step="0.1" id="sl-mn" placeholder="28"></div>
+      <div><label class="fl" style="font-size:12px">Iron</label><input type="number" step="0.1" id="sl-fe" placeholder="85"></div>
+      <div><label class="fl" style="font-size:12px">Copper</label><input type="number" step="0.1" id="sl-cu" placeholder="0.8"></div>
+      <div><label class="fl" style="font-size:12px">Boron</label><input type="number" step="0.1" id="sl-b" placeholder="0.6"></div>
+    </div></div>
+    <div class="fg"><label class="fl">Notes</label><textarea id="sl-notes" placeholder="Sample location notes, observations..."></textarea></div>
+    <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="sl-save" onclick="saveSoil()">Save soil sample</button></div>
+  </div>
+</div>
+
+<!-- ===== TISSUE SETUP ===== -->
+<div class="screen" id="screen-tissue-setup">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Tissue sample</h2>
+  </div>
+  <div class="scroll">
+    <div class="fg"><label class="fl">Field</label><select id="ts-field" onchange="onFieldChange('ts')"><option value="">— select —</option></select></div>
+    <div class="fg"><label class="fl">Date</label><input type="date" id="ts-date"></div>
+    <div class="fg"><label class="fl">GPS location</label><div class="gps-box"><div class="gdot" id="ts-gdot"></div><div class="ginfo" id="ts-ginfo">Tap capture</div><button class="btn btn-sm gcap" onclick="captureGPS('ts')">Capture</button></div></div>
+    <div class="fg"><label class="fl">Growth stage</label><select id="ts-stage"><option value="">— select field first —</option></select></div>
+    <div class="fg"><label class="fl">Tissue type</label><select id="ts-tissue"><option value="">—</option><option>Ear leaf (corn)</option><option>Whole plant (corn V6)</option><option>Upper trifoliate (soybeans)</option><option>Whole plant (soybeans V3)</option><option>Flag leaf (wheat)</option><option>Whole plant (wheat tillering)</option></select></div>
+    <div class="fg"><label class="fl">Lab name <span class="hint">optional</span></label><input type="text" id="ts-lab" placeholder="e.g. Midwest Laboratories"></div>
+    <div class="fg"><label class="fl">Sample ID <span class="hint">optional</span></label><input type="text" id="ts-sid" placeholder="Lab sample number"></div>
+    <div class="ngrid-label">Macronutrients (%)</div>
+    <div class="fg"><div class="ngrid">
+      <div><label class="fl" style="font-size:12px">Nitrogen %</label><input type="number" step="0.01" id="ts-n" placeholder="3.2"></div>
+      <div><label class="fl" style="font-size:12px">Phosphorus %</label><input type="number" step="0.01" id="ts-p" placeholder="0.35"></div>
+      <div><label class="fl" style="font-size:12px">Potassium %</label><input type="number" step="0.01" id="ts-k" placeholder="2.8"></div>
+      <div><label class="fl" style="font-size:12px">Sulfur %</label><input type="number" step="0.01" id="ts-s" placeholder="0.18"></div>
+      <div><label class="fl" style="font-size:12px">Calcium %</label><input type="number" step="0.01" id="ts-ca" placeholder="0.42"></div>
+      <div><label class="fl" style="font-size:12px">Magnesium %</label><input type="number" step="0.01" id="ts-mg" placeholder="0.28"></div>
+    </div></div>
+    <div class="ngrid-label">Micronutrients (ppm)</div>
+    <div class="fg"><div class="ngrid">
+      <div><label class="fl" style="font-size:12px">Zinc</label><input type="number" step="0.1" id="ts-zn" placeholder="22"></div>
+      <div><label class="fl" style="font-size:12px">Manganese</label><input type="number" step="0.1" id="ts-mn" placeholder="48"></div>
+      <div><label class="fl" style="font-size:12px">Iron</label><input type="number" step="0.1" id="ts-fe" placeholder="85"></div>
+      <div><label class="fl" style="font-size:12px">Copper</label><input type="number" step="0.1" id="ts-cu" placeholder="6"></div>
+      <div><label class="fl" style="font-size:12px">Boron</label><input type="number" step="0.1" id="ts-b" placeholder="8"></div>
+    </div></div>
+    <div class="fg"><label class="fl">Notes</label><textarea id="ts-notes" placeholder="Visual observations, crop appearance..."></textarea></div>
+    <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="ts-save" onclick="saveTissue()">Save tissue sample</button></div>
+  </div>
+</div>
+
+<!-- ===== DRAINAGE SETUP ===== -->
+<div class="screen" id="screen-drain-setup">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>Drainage observation</h2>
+  </div>
+  <div class="scroll">
+    <div class="fg"><label class="fl">Field</label><select id="dr-field"><option value="">— select —</option></select></div>
+    <div class="fg"><label class="fl">Date</label><input type="date" id="dr-date"></div>
+    <div class="fg"><label class="fl">GPS location</label><div class="gps-box"><div class="gdot" id="dr-gdot"></div><div class="ginfo" id="dr-ginfo">Tap capture</div><button class="btn btn-sm gcap" onclick="captureGPS('dr')">Capture</button></div></div>
+    <div class="fg"><label class="fl">Observation type</label><select id="dr-type"><option value="">—</option><option>Standing water</option><option>Saturated soil</option><option>Wet spot / seep</option><option>Tile flowing</option><option>Tile not flowing</option><option>Tile outlet check</option><option>Water table depth check</option></select></div>
+    <div class="fg"><label class="fl">Water table depth <span class="hint">inches below surface</span></label><input type="number" id="dr-wtd" placeholder="e.g. 18"></div>
+    <div class="fg"><label class="fl">Tile condition</label><select id="dr-tile"><option value="">—</option><option>Flowing well</option><option>Flowing slowly</option><option>Not flowing</option><option>Blocked</option><option>Broken / offset</option><option>No tile in area</option><option>Unknown</option></select></div>
+    <div class="fg"><label class="fl">Notes</label><textarea id="dr-notes" placeholder="Location description, surrounding conditions..."></textarea></div>
+    <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="dr-save" onclick="saveDrain()">Save observation</button></div>
+  </div>
+</div>
+
+<!-- ===== JD CONNECT SCREEN ===== -->
+<div class="screen" id="screen-jd">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
+    <h2>John Deere</h2>
+  </div>
+  <div class="scroll" style="padding:16px">
+
+    <!-- Connection status card -->
+    <div id="jd-status-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="font-size:28px">🚜</div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text)" id="jd-status-title">Not connected</div>
+          <div style="font-size:13px;color:var(--text2)" id="jd-status-sub">Connect to sync fields from Operations Center</div>
+        </div>
+      </div>
+      <button class="btn btn-p btn-w" id="jd-connect-btn" onclick="jdConnect()">Connect John Deere Operations Center</button>
+      <button class="btn btn-w" id="jd-disconnect-btn" onclick="jdDisconnect()" style="display:none;margin-top:8px;color:var(--red);border-color:var(--red)">Disconnect</button>
+    </div>
+
+    <!-- Sync fields section — hidden until connected -->
+    <div id="jd-sync-section" style="display:none">
+      <div class="sl" style="padding-top:0">Operations Center Fields</div>
+      <div style="padding:0 0 8px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-w" onclick="jdSyncFields()" id="jd-sync-btn">
+          🔄 Sync fields from Operations Center
+        </button>
+        <button class="btn btn-p btn-w" onclick="jdImportAll()" id="jd-import-all-btn" style="display:none">
+          ⬇️ Import All Fields
+        </button>
+        <button class="btn btn-w" onclick="jdSyncOperations()" id="jd-ops-btn" style="display:none">
+          📊 Sync Field Operations & Boundaries
+        </button>
+      </div>
+      <div id="jd-progress" style="display:none;padding:12px 16px;background:var(--green-light);border-radius:var(--r);margin-bottom:8px;font-size:14px;color:var(--green-dark)"></div>
+      <div id="jd-orgs-list"></div>
+      <div id="jd-fields-list"></div>
+    </div>
+
+    <!-- Info section -->
+    <div style="background:var(--blue-bg);border-radius:var(--r);padding:14px;margin-top:8px">
+      <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:6px">What gets synced</div>
+      <div style="font-size:13px;color:var(--blue);line-height:1.6">
+        • Field names and boundaries<br>
+        • Farm and client organization<br>
+        • Crop type per field<br>
+        • Field operation history<br>
+        • Product/variety data
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+const SB_URL = 'https://eszgxabwboeewycyzzvo.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzemd4YWJ3Ym9lZXd5Y3l6enZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwODA4MzgsImV4cCI6MjA5MDY1NjgzOH0.LAmA0nVG3AyoJXlnvdvcTx3crLOHuW8rKg51cPApsi8';
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiZmllbGQtc2NvdXQtYXBwIiwiYSI6ImNseDBreGgxdjBja2MybHFzY3p3NzFkcm8ifQ.placeholder';
+
+// ── SUPABASE ─────────────────────────────────────────────────────────────────
+let authToken = localStorage.getItem('fs_token') || SB_KEY;
+
+const sb = {
+  async req(method, path, body, useToken) {
+    try {
+      setSyncDot('sync');
+      const res = await fetch(SB_URL + path, {
+        method,
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + (useToken ? authToken : SB_KEY),
+          'Content-Type': 'application/json',
+          'Prefer': method === 'POST' ? 'return=representation' : ''
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+      setSyncDot('ok');
+      return data;
+    } catch(e) { setSyncDot('err'); throw e; }
+  },
+  async get(table, q='') { return this.req('GET', `/rest/v1/${table}?${q}&order=created_at.desc`); },
+  async insert(table, data) { return this.req('POST', `/rest/v1/${table}`, data); },
+  async update(table, id, data) { return this.req('PATCH', `/rest/v1/${table}?id=eq.${id}`, data); },
+  async delete(table, id) { return this.req('DELETE', `/rest/v1/${table}?id=eq.${id}`); },
+  async signUp(email, pw) { return this.req('POST', '/auth/v1/signup', { email, password: pw }); },
+  async signIn(email, pw) { return this.req('POST', '/auth/v1/token?grant_type=password', { email, password: pw }); },
+  async uploadPhoto(file, path) {
+    setSyncDot('sync');
+    const compressed = await compressImage(file);
+    const res = await fetch(`${SB_URL}/storage/v1/object/scout-photos/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'image/jpeg' },
+      body: compressed
+    });
+    if (!res.ok) throw new Error('Photo upload failed');
+    setSyncDot('ok');
+    return `${SB_URL}/storage/v1/object/public/scout-photos/${path}`;
+  }
+};
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+let authMode = 'signin';
+function toggleAuth() {
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  document.getElementById('auth-sub').textContent = authMode === 'signin' ? 'Sign in to your farm account' : 'Create your farm account';
+  document.getElementById('auth-btn').textContent = authMode === 'signin' ? 'Sign in' : 'Create account';
+  document.querySelector('.auth-switch').innerHTML = authMode === 'signin'
+    ? "Don't have an account? <span onclick=\"toggleAuth()\">Create one</span>"
+    : "Already have an account? <span onclick=\"toggleAuth()\">Sign in</span>";
+}
+
+async function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pw = document.getElementById('auth-pw').value;
+  const errEl = document.getElementById('auth-err');
+  errEl.classList.remove('show');
+  if (!email || !pw) { errEl.textContent = 'Enter email and password'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true; btn.textContent = 'Please wait...';
+  try {
+    const data = authMode === 'signin' ? await sb.signIn(email, pw) : await sb.signUp(email, pw);
+    if (data.access_token) {
+      authToken = data.access_token;
+      localStorage.setItem('fs_token', authToken);
+      localStorage.setItem('fs_email', email);
+      showScreen('screen-home');
+    } else if (authMode === 'signup' && data.id) {
+      errEl.textContent = 'Account created! Check your email to confirm, then sign in.';
+      errEl.classList.add('show'); errEl.style.background = 'var(--green-light)'; errEl.style.color = 'var(--green-dark)';
+      authMode = 'signin';
+    } else {
+      throw new Error(data.error_description || data.msg || 'Authentication failed');
+    }
+  } catch(e) {
+    errEl.textContent = e.message || 'Sign in failed — check credentials';
+    errEl.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = authMode === 'signin' ? 'Sign in' : 'Create account';
+}
+
+// Check existing session
+const savedToken = localStorage.getItem('fs_token');
+if (savedToken) { authToken = savedToken; }
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function setSyncDot(s) { const d = document.getElementById('sdot'); if(d) d.className = 'sdot ' + s; }
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+function compressImage(file) {
+  return new Promise(resolve => {
+    const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d'), img = new Image();
+    img.onload = () => {
+      const maxW = 1200; let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(resolve, 'image/jpeg', 0.75);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+window.addEventListener('online', () => document.getElementById('offbanner').classList.remove('show'));
+window.addEventListener('offline', () => document.getElementById('offbanner').classList.add('show'));
+
+// ── CROP DATA ─────────────────────────────────────────────────────────────────
+const STAGES = {
+  corn: ['VE','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','VT','R1 (silk)','R2 (blister)','R3 (milk)','R4 (dough)','R5 (dent)','R6 (black layer)'],
+  soybeans: ['VE','VC','V1','V2','V3','V4','V5','V6','R1','R2','R3','R4','R5','R6','R7','R8'],
+  wheat: ['Germination','Tillering','Jointing','Booting','Heading','Flowering','Grain fill','Dough','Ripening']
+};
+const WEEDS = ['Waterhemp','Palmer amaranth','Common ragweed','Giant ragweed','Velvetleaf','Common lambsquarters','Foxtail (giant)','Foxtail (green)','Barnyard grass','Volunteer corn','Wild mustard','Horseweed / Marestail','Buttonweed','Black nightshade','Cocklebur','Morningglory','Other'];
+const INSECTS = ['Corn rootworm (adult)','Black cutworm','European corn borer','Aphids (corn)','Aphids (soybean)','Bean leaf beetle','Japanese beetle','Grasshopper','Spider mite','Slugs','Soybean gall midge','Thistle caterpillar','Western bean cutworm','Thrips','Other'];
+const DISEASES = {
+  corn: ['Gray leaf spot','Northern corn leaf blight','Southern rust','Common smut','Tar spot','Goss\'s wilt','Diplodia ear rot','Gibberella ear rot','Anthracnose stalk rot','Other'],
+  soybeans: ['Sudden death syndrome','White mold','Frogeye leaf spot','Phytophthora root rot','Brown stem rot','SCN','Bean pod mottle virus','Iron deficiency chlorosis','Other'],
+  wheat: ['Fusarium head blight (scab)','Stripe rust','Leaf rust','Septoria leaf blotch','Powdery mildew','Barley yellow dwarf','Take-all root rot','Other']
+};
+const CROP_ICONS = { corn: '🌽', soybeans: '🫘', wheat: '🌾' };
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = { fields: [], obs: [], obsPhotos: {}, gps: {}, obsCounter: 0 };
+let logTab = 'all';
+let mapInstance = null, userMarker = null, watchId = null;
+let mapMarkers = [];
+
+// ── SCREENS ───────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  hideAddMenu();
+  if (id === 'screen-home') renderHome();
+  if (id === 'screen-fields') renderFields();
+  if (id === 'screen-scout-setup') initScout();
+  if (id === 'screen-soil-setup') initForm('sl');
+  if (id === 'screen-tissue-setup') initForm('ts');
+  if (id === 'screen-drain-setup') initForm('dr');
+  if (id === 'screen-log') renderLog();
+  if (id === 'screen-map') initMap();
+  if (id === 'screen-jd') initJDScreen();
+}
+
+function showAddMenu() {
+  const m = document.getElementById('add-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+function hideAddMenu() { document.getElementById('add-menu').style.display = 'none'; }
+
+// ── HOME ──────────────────────────────────────────────────────────────────────
+async function renderHome() {
+  try {
+    const [fields, scouts, soils, tissues, drains, flags] = await Promise.all([
+      sb.get('fields'),
+      sb.get('scout_points', 'select=id,field_id'),
+      sb.get('soil_samples', 'select=id'),
+      sb.get('tissue_samples', 'select=id'),
+      sb.get('drainage_obs', 'select=id'),
+      sb.get('observations', 'threshold=eq.above&select=id')
+    ]);
+    state.fields = fields || [];
+    document.getElementById('s-fields').textContent = state.fields.length;
+    document.getElementById('s-scouts').textContent = (scouts||[]).length;
+    document.getElementById('s-flags').textContent = (flags||[]).length;
+    document.getElementById('s-samples').textContent = (soils||[]).length + (tissues||[]).length;
+    const el = document.getElementById('home-fields');
+    if (!state.fields.length) { el.innerHTML = '<div class="empty">No fields yet.<br>Tap Fields to add your first field.</div>'; return; }
+    el.innerHTML = state.fields.map(f => {
+      const pts = (scouts||[]).filter(p => p.field_id === f.id).length;
+      return `<div class="field-row" onclick="startScout('${f.id}')">
+        <div class="ficon ${f.crop}">${CROP_ICONS[f.crop]||'🌱'}</div>
+        <div style="flex:1;min-width:0"><div class="fname">${f.name}</div><div class="fmeta">${f.crop} · ${pts} point${pts!==1?'s':''}</div></div>
+        <span class="chev">›</span>
+      </div>`;
+    }).join('');
+  } catch(e) { toast('Could not load — check connection'); }
+}
+
+// ── FIELDS ────────────────────────────────────────────────────────────────────
+async function renderFields() {
+  const el = document.getElementById('fields-list');
+  try {
+    state.fields = await sb.get('fields');
+    if (!state.fields.length) { el.innerHTML = '<div class="empty">No fields yet</div>'; return; }
+    el.innerHTML = state.fields.map(f => `
+      <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border);gap:12px">
+        <div class="ficon ${f.crop}">${CROP_ICONS[f.crop]||'🌱'}</div>
+        <div style="flex:1"><div class="fname">${f.name}</div><div class="fmeta">${f.crop}</div></div>
+        <button style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:24px;padding:4px 8px" onclick="deleteField('${f.id}')">×</button>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load</div>'; }
+}
+
+async function addField() {
+  const name = document.getElementById('nf-name').value.trim();
+  const crop = document.getElementById('nf-crop').value;
+  if (!name) { toast('Enter a field name'); return; }
+  try { await sb.insert('fields', {name, crop}); document.getElementById('nf-name').value = ''; toast('Field added'); renderFields(); }
+  catch(e) { toast('Could not save field'); }
+}
+
+async function deleteField(id) {
+  if (!confirm('Delete this field and all data?')) return;
+  try { await sb.delete('fields', id); toast('Field deleted'); renderFields(); }
+  catch(e) { toast('Could not delete'); }
+}
+
+function populateFieldSelect(selId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = '<option value="">— select —</option>' + state.fields.map(f => `<option value="${f.id}">${f.name} (${f.crop})</option>`).join('');
+}
+
+// ── GPS ────────────────────────────────────────────────────────────────────────
+function captureGPS(prefix) {
+  const dot = document.getElementById(prefix+'-gdot'), info = document.getElementById(prefix+'-ginfo');
+  dot.className = 'gdot loading'; info.textContent = 'Getting location...';
+  if (!navigator.geolocation) { dot.className = 'gdot err'; info.textContent = 'GPS not available'; return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      state.gps[prefix] = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy) };
+      dot.className = 'gdot ok';
+      info.textContent = `${state.gps[prefix].lat.toFixed(5)}, ${state.gps[prefix].lng.toFixed(5)}  (±${state.gps[prefix].acc}m)`;
+    },
+    () => { dot.className = 'gdot err'; info.textContent = 'Could not get location — check permissions'; },
+    { enableHighAccuracy: true, timeout: 12000 }
+  );
+}
+
+// ── SCOUT ──────────────────────────────────────────────────────────────────────
+function initScout() {
+  state.obs = []; state.obsPhotos = {}; state.obsCounter = 0;
+  state.gps['sc'] = null;
+  document.getElementById('sc-gdot').className = 'gdot';
+  document.getElementById('sc-ginfo').textContent = 'Tap capture';
+  document.getElementById('sc-notes').value = '';
+  document.getElementById('sc-stand').value = '';
+  document.getElementById('sc-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('obs-list').innerHTML = '';
+  populateFieldSelect('sc-field');
+  document.getElementById('sc-stage').innerHTML = '<option value="">— select field first —</option>';
+}
+
+function startScout(fieldId) {
+  showScreen('screen-scout-setup');
+  setTimeout(() => { document.getElementById('sc-field').value = fieldId; onFieldChange('sc'); }, 60);
+}
+
+function onFieldChange(prefix) {
+  const selId = prefix + '-field', stageId = prefix + '-stage';
+  const fieldId = document.getElementById(selId).value;
+  const field = state.fields.find(f => f.id === fieldId);
+  const stageSel = document.getElementById(stageId);
+  if (!field) { stageSel.innerHTML = '<option value="">— select field first —</option>'; return; }
+  const list = STAGES[field.crop] || [];
+  stageSel.innerHTML = '<option value="">— select —</option>' + list.map(s => `<option>${s}</option>`).join('');
+}
+
+// Observations
+function addObs(type) {
+  const id = 'obs' + (++state.obsCounter);
+  const fieldId = document.getElementById('sc-field').value;
+  const field = state.fields.find(f => f.id === fieldId);
+  state.obs.push({ id, type, crop: field?.crop || 'corn', species:'', count:'', count_unit:'', growth_stage:'', pct_affected:'', severity:'', tissue:'', distribution:'', threshold:'' });
+  renderObs();
+  setTimeout(() => document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'center'}), 100);
+}
+
+function removeObs(id) { state.obs = state.obs.filter(o => o.id !== id); delete state.obsPhotos[id]; renderObs(); }
+function obsSet(id, key, val) { const o = state.obs.find(o => o.id === id); if(o) o[key] = val; }
+function setThr(id, val) { const o = state.obs.find(o => o.id === id); if(!o) return; o.threshold = o.threshold === val ? '' : val; renderObs(); }
+
+function renderObs() {
+  document.getElementById('obs-list').innerHTML = state.obs.map(o => {
+    if (o.type === 'weed') return obsCard(o, weedFields(o));
+    if (o.type === 'insect') return obsCard(o, insectFields(o));
+    if (o.type === 'disease') return obsCard(o, diseaseFields(o));
+    return '';
+  }).join('');
+}
+
+function obsCard(o, fields) {
+  const t = o.threshold||'';
+  const p = state.obsPhotos[o.id];
+  const photoHtml = p?.previewUrl
+    ? `<div class="full"><img class="photo-preview" src="${p.previewUrl}"><button class="photo-rm" onclick="removePhoto('${o.id}')">Remove photo</button></div>`
+    : `<div class="full"><button class="btn btn-sm photo-btn" onclick="triggerPhoto('${o.id}')">📷 Add photo</button></div>`;
+  return `<div class="obs-card" id="${o.id}">
+    <div class="obs-hdr"><span class="obs-lbl">${o.type.charAt(0).toUpperCase()+o.type.slice(1)}</span><button class="obs-rm" onclick="removeObs('${o.id}')">×</button></div>
+    <div class="ogrid">
+      ${fields}
+      <div class="full"><label class="fl" style="font-size:12px">vs. threshold</label>
+        <div class="thr-row">
+          <button class="thr below${t==='below'?' a':''}" onclick="setThr('${o.id}','below')">Below</button>
+          <button class="thr at${t==='at'?' a':''}" onclick="setThr('${o.id}','at')">At</button>
+          <button class="thr above${t==='above'?' a':''}" onclick="setThr('${o.id}','above')">Above</button>
+        </div>
+      </div>
+      ${photoHtml}
+    </div>
+  </div>`;
+}
+
+function weedFields(o) {
+  const so = WEEDS.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
+  return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— species —</option>${so}</select></div>
+    <div><label class="fl" style="font-size:12px">Count / row ft</label><input type="number" min="0" placeholder="0" value="${o.count}" onchange="obsSet('${o.id}','count',this.value)"></div>
+    <div><label class="fl" style="font-size:12px">Growth stage</label><select onchange="obsSet('${o.id}','growth_stage',this.value)"><option>—</option><option>Cotyledon</option><option>1-leaf</option><option>2-leaf</option><option>3-leaf</option><option>4-leaf</option><option>5-leaf+</option><option>Flowering</option><option>Seed set</option></select></div>
+    <div class="full"><label class="fl" style="font-size:12px">Distribution</label><select onchange="obsSet('${o.id}','distribution',this.value)"><option>—</option><option>Uniform</option><option>Patches</option><option>Field edges</option><option>Low spots</option><option>Isolated plants</option></select></div>`;
+}
+
+function insectFields(o) {
+  const so = INSECTS.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
+  return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— species —</option>${so}</select></div>
+    <div><label class="fl" style="font-size:12px">Count</label><input type="number" min="0" placeholder="0" value="${o.count}" onchange="obsSet('${o.id}','count',this.value)"></div>
+    <div><label class="fl" style="font-size:12px">Method</label><select onchange="obsSet('${o.id}','count_unit',this.value)"><option>—</option><option>per plant</option><option>per 100 sweeps</option><option>per row ft</option><option>presence / absence</option></select></div>
+    <div class="full"><label class="fl" style="font-size:12px">% plants infested</label><input type="number" min="0" max="100" placeholder="0–100" value="${o.pct_affected}" onchange="obsSet('${o.id}','pct_affected',this.value)"></div>`;
+}
+
+function diseaseFields(o) {
+  const dList = DISEASES[o.crop] || DISEASES.corn;
+  const so = dList.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
+  return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— disease —</option>${so}</select></div>
+    <div><label class="fl" style="font-size:12px">% incidence</label><input type="number" min="0" max="100" placeholder="0–100" value="${o.pct_affected}" onchange="obsSet('${o.id}','pct_affected',this.value)"></div>
+    <div><label class="fl" style="font-size:12px">Severity (1–9)</label><input type="number" min="1" max="9" placeholder="1–9" value="${o.severity}" onchange="obsSet('${o.id}','severity',this.value)"></div>
+    <div class="full"><label class="fl" style="font-size:12px">Tissue level</label><select onchange="obsSet('${o.id}','tissue',this.value)"><option>—</option><option>Lower canopy</option><option>Mid canopy</option><option>Upper canopy</option><option>Ear / pod</option><option>Stalk / stem</option><option>Root</option><option>Whole plant</option></select></div>`;
+}
+
+// Photo
+let currentPhotoObs = null;
+function triggerPhoto(obsId) { currentPhotoObs = obsId; const i = document.getElementById('photo-input'); i.value=''; i.click(); }
+document.getElementById('photo-input').addEventListener('change', function() {
+  const f = this.files[0]; if(!f||!currentPhotoObs) return;
+  state.obsPhotos[currentPhotoObs] = { file: f, previewUrl: URL.createObjectURL(f), uploadedUrl: null };
+  renderObs();
+});
+function removePhoto(id) { delete state.obsPhotos[id]; renderObs(); }
+
+async function saveScout() {
+  const fieldId = document.getElementById('sc-field').value;
+  if (!fieldId) { toast('Select a field'); return; }
+  const field = state.fields.find(f => f.id === fieldId);
+  const btn = document.getElementById('sc-save'); btn.disabled=true; btn.textContent='Saving...';
+  try {
+    const [point] = await sb.insert('scout_points', {
+      field_id: fieldId, field_name: field.name, crop: field.crop,
+      date: document.getElementById('sc-date').value,
+      gps_lat: state.gps['sc']?.lat||null, gps_lng: state.gps['sc']?.lng||null, gps_accuracy: state.gps['sc']?.acc||null,
+      growth_stage: document.getElementById('sc-stage').value||null,
+      stand_count: document.getElementById('sc-stand').value ? parseInt(document.getElementById('sc-stand').value) : null,
+      notes: document.getElementById('sc-notes').value||null
+    });
+    for (const o of state.obs) {
+      let photoUrl = null;
+      const pd = state.obsPhotos[o.id];
+      if (pd?.file) { try { photoUrl = await sb.uploadPhoto(pd.file, `${point.id}/${o.id}_${Date.now()}.jpg`); } catch(e){} }
+      await sb.insert('observations', {
+        scout_point_id: point.id, type: o.type, species: o.species||null,
+        count: o.count ? parseFloat(o.count) : null, count_unit: o.count_unit||null,
+        growth_stage: o.growth_stage||null, pct_affected: o.pct_affected ? parseFloat(o.pct_affected) : null,
+        severity: o.severity ? parseInt(o.severity) : null, tissue: o.tissue||null,
+        distribution: o.distribution||null, threshold: o.threshold||null, photo_url: photoUrl
+      });
+    }
+    toast('Scouting point saved'); showScreen('screen-home');
+  } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save scouting point'; }
+}
+
+// ── SOIL / TISSUE / DRAIN FORMS ───────────────────────────────────────────────
+function initForm(prefix) {
+  state.gps[prefix] = null;
+  const dot = document.getElementById(prefix+'-gdot'), info = document.getElementById(prefix+'-ginfo');
+  if(dot) dot.className = 'gdot';
+  if(info) info.textContent = 'Tap capture';
+  const dateEl = document.getElementById(prefix+'-date');
+  if(dateEl) dateEl.value = new Date().toISOString().slice(0,10);
+  populateFieldSelect(prefix+'-field');
+  if(prefix==='ts') document.getElementById('ts-stage').innerHTML = '<option value="">— select field first —</option>';
+}
+
+function fv(id) { const el = document.getElementById(id); return el?.value?.trim()||null; }
+function fn(id) { const v = fv(id); return v ? parseFloat(v) : null; }
+
+async function saveSoil() {
+  const fieldId = fv('sl-field'); if(!fieldId){toast('Select a field');return;}
+  const field = state.fields.find(f=>f.id===fieldId);
+  const btn = document.getElementById('sl-save'); btn.disabled=true; btn.textContent='Saving...';
+  try {
+    await sb.insert('soil_samples', {
+      field_id:fieldId, field_name:field.name, crop:field.crop,
+      date:fv('sl-date'), gps_lat:state.gps['sl']?.lat||null, gps_lng:state.gps['sl']?.lng||null, gps_accuracy:state.gps['sl']?.acc||null,
+      sample_depth:fv('sl-depth'), lab_name:fv('sl-lab'), sample_id:fv('sl-sid'),
+      ph:fn('sl-ph'), buffer_ph:fn('sl-bph'), organic_matter:fn('sl-om'), cec:fn('sl-cec'),
+      phosphorus:fn('sl-p'), potassium:fn('sl-k'), calcium:fn('sl-ca'), magnesium:fn('sl-mg'), sulfur:fn('sl-s'),
+      ca_sat:fn('sl-casat'), mg_sat:fn('sl-mgsat'), k_sat:fn('sl-ksat'), h_sat:fn('sl-hsat'),
+      zinc:fn('sl-zn'), manganese:fn('sl-mn'), iron:fn('sl-fe'), copper:fn('sl-cu'), boron:fn('sl-b'),
+      notes:fv('sl-notes')
+    });
+    toast('Soil sample saved'); showScreen('screen-home');
+  } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save soil sample'; }
+}
+
+async function saveTissue() {
+  const fieldId = fv('ts-field'); if(!fieldId){toast('Select a field');return;}
+  const field = state.fields.find(f=>f.id===fieldId);
+  const btn = document.getElementById('ts-save'); btn.disabled=true; btn.textContent='Saving...';
+  try {
+    await sb.insert('tissue_samples', {
+      field_id:fieldId, field_name:field.name, crop:field.crop,
+      date:fv('ts-date'), gps_lat:state.gps['ts']?.lat||null, gps_lng:state.gps['ts']?.lng||null, gps_accuracy:state.gps['ts']?.acc||null,
+      growth_stage:fv('ts-stage'), tissue_type:fv('ts-tissue'), lab_name:fv('ts-lab'), sample_id:fv('ts-sid'),
+      nitrogen:fn('ts-n'), phosphorus:fn('ts-p'), potassium:fn('ts-k'), sulfur:fn('ts-s'), calcium:fn('ts-ca'), magnesium:fn('ts-mg'),
+      zinc:fn('ts-zn'), manganese:fn('ts-mn'), iron:fn('ts-fe'), copper:fn('ts-cu'), boron:fn('ts-b'),
+      notes:fv('ts-notes')
+    });
+    toast('Tissue sample saved'); showScreen('screen-home');
+  } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save tissue sample'; }
+}
+
+async function saveDrain() {
+  const fieldId = fv('dr-field'); if(!fieldId){toast('Select a field');return;}
+  const field = state.fields.find(f=>f.id===fieldId);
+  const btn = document.getElementById('dr-save'); btn.disabled=true; btn.textContent='Saving...';
+  try {
+    await sb.insert('drainage_obs', {
+      field_id:fieldId, field_name:field.name,
+      date:fv('dr-date'), gps_lat:state.gps['dr']?.lat||null, gps_lng:state.gps['dr']?.lng||null, gps_accuracy:state.gps['dr']?.acc||null,
+      observation_type:fv('dr-type'), water_table_depth:fn('dr-wtd'), tile_condition:fv('dr-tile'), notes:fv('dr-notes')
+    });
+    toast('Drainage observation saved'); showScreen('screen-home');
+  } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save observation'; }
+}
+
+// ── MAP ────────────────────────────────────────────────────────────────────────
+const LAYER_VISIBLE = { scout: true, soil: true, tissue: true, drain: true };
+
+async function initMap() {
+  if (!mapInstance) {
+    mapboxgl.accessToken = 'pk.eyJ1Ijoia2FuZS1mZmYiLCJhIjoiY21uaHlxNXZiMDd6aTJxcHA3cjJ6b2JlMyJ9.aebCwgJwj-3Lvt6N2guIBA';
+    mapInstance = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      center: [-93.5, 43.5],
+      zoom: 12
+    });
+    mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    mapInstance.on('load', () => loadMapData());
+  } else {
+    loadMapData();
+  }
+  startWatchingLocation();
+}
+
+async function loadMapData() {
+  // Clear existing markers
+  mapMarkers.forEach(m => m.remove());
+  mapMarkers = [];
+  try {
+    const [scouts, soils, tissues, drains, allObs] = await Promise.all([
+      sb.get('scout_points'),
+      sb.get('soil_samples'),
+      sb.get('tissue_samples'),
+      sb.get('drainage_obs'),
+      sb.get('observations', 'select=scout_point_id,threshold,species')
+    ]);
+
+    // Scout markers
+    if (LAYER_VISIBLE.scout) {
+      (scouts||[]).filter(p => p.gps_lat).forEach(p => {
+        const obs = (allObs||[]).filter(o => o.scout_point_id === p.id);
+        const hasAbove = obs.some(o => o.threshold === 'above');
+        const hasAt = obs.some(o => o.threshold === 'at');
+        const color = hasAbove ? '#A32D2D' : hasAt ? '#BA7517' : '#1D9E75';
+        const el = makeMarkerEl(color, '🔍', 'scout');
+        const marker = new mapboxgl.Marker({element:el})
+          .setLngLat([p.gps_lng, p.gps_lat])
+          .addTo(mapInstance);
+        el.addEventListener('click', () => showMapCard('scout', p, obs));
+        mapMarkers.push(marker);
+      });
+    }
+
+    // Soil markers
+    if (LAYER_VISIBLE.soil) {
+      (soils||[]).filter(s => s.gps_lat).forEach(s => {
+        const el = makeMarkerEl('#BA7517', '🧪', 'soil');
+        const marker = new mapboxgl.Marker({element:el}).setLngLat([s.gps_lng, s.gps_lat]).addTo(mapInstance);
+        el.addEventListener('click', () => showMapCard('soil', s));
+        mapMarkers.push(marker);
+      });
+    }
+
+    // Tissue markers
+    if (LAYER_VISIBLE.tissue) {
+      (tissues||[]).filter(t => t.gps_lat).forEach(t => {
+        const el = makeMarkerEl('#1D9E75', '🌿', 'tissue');
+        const marker = new mapboxgl.Marker({element:el}).setLngLat([t.gps_lng, t.gps_lat]).addTo(mapInstance);
+        el.addEventListener('click', () => showMapCard('tissue', t));
+        mapMarkers.push(marker);
+      });
+    }
+
+    // Drain markers
+    if (LAYER_VISIBLE.drain) {
+      (drains||[]).filter(d => d.gps_lat).forEach(d => {
+        const el = makeMarkerEl('#185FA5', '💧', 'drain');
+        const marker = new mapboxgl.Marker({element:el}).setLngLat([d.gps_lng, d.gps_lat]).addTo(mapInstance);
+        el.addEventListener('click', () => showMapCard('drain', d));
+        mapMarkers.push(marker);
+      });
+    }
+
+    // Auto-fit to markers if we have any
+    const allPts = [...(scouts||[]),...(soils||[]),...(tissues||[]),...(drains||[])].filter(p=>p.gps_lat);
+    if (allPts.length > 0) {
+      const bounds = allPts.reduce((b,p) => b.extend([p.gps_lng, p.gps_lat]), new mapboxgl.LngLatBounds([allPts[0].gps_lng, allPts[0].gps_lat],[allPts[0].gps_lng, allPts[0].gps_lat]));
+      mapInstance.fitBounds(bounds, { padding: 60, maxZoom: 16 });
+    }
+  } catch(e) { toast('Could not load map data'); }
+}
+
+function makeMarkerEl(color, icon, type) {
+  const el = document.createElement('div');
+  el.style.cssText = `width:34px;height:34px;border-radius:50%;background:${color};border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)`;
+  el.textContent = icon;
+  return el;
+}
+
+function toggleLayer(type, btn) {
+  LAYER_VISIBLE[type] = !LAYER_VISIBLE[type];
+  btn.classList.toggle('on', LAYER_VISIBLE[type]);
+  loadMapData();
+}
+
+function showMapCard(type, data, obs) {
+  const card = document.getElementById('map-card');
+  const content = document.getElementById('map-card-content');
+  const typeLabels = {scout:'Scouting point', soil:'Soil sample', tissue:'Tissue sample', drain:'Drainage observation'};
+
+  let rows = `<div class="mbc-type">${typeLabels[type]||type}</div>
+    <div class="mbc-title">${data.field_name||'Unknown field'}</div>
+    <div class="mbc-sub">${data.date||''} · ${data.gps_lat ? data.gps_lat.toFixed(5)+', '+data.gps_lng.toFixed(5) : 'No GPS'}</div>`;
+
+  if (type === 'scout') {
+    if (data.growth_stage) rows += row('Growth stage', data.growth_stage);
+    if (data.stand_count) rows += row('Stand count', data.stand_count.toLocaleString()+' plants/ac');
+    (obs||[]).filter(o=>o.species).forEach(o => {
+      const flag = o.threshold === 'above' ? ' ⚑' : o.threshold === 'at' ? ' ⚐' : '';
+      rows += row(o.species, o.threshold ? o.threshold+' threshold'+flag : '—');
+    });
+  }
+  if (type === 'soil') {
+    if (data.ph != null) rows += row('pH', data.ph);
+    if (data.organic_matter != null) rows += row('Organic matter', data.organic_matter+'%');
+    if (data.phosphorus != null) rows += row('Phosphorus', data.phosphorus+' ppm');
+    if (data.potassium != null) rows += row('Potassium', data.potassium+' ppm');
+    if (data.cec != null) rows += row('CEC', data.cec);
+    if (data.sample_depth) rows += row('Depth', data.sample_depth);
+    if (data.lab_name) rows += row('Lab', data.lab_name);
+  }
+  if (type === 'tissue') {
+    if (data.growth_stage) rows += row('Growth stage', data.growth_stage);
+    if (data.tissue_type) rows += row('Tissue', data.tissue_type);
+    if (data.nitrogen != null) rows += row('Nitrogen', data.nitrogen+'%');
+    if (data.phosphorus != null) rows += row('Phosphorus', data.phosphorus+'%');
+    if (data.potassium != null) rows += row('Potassium', data.potassium+'%');
+    if (data.sulfur != null) rows += row('Sulfur', data.sulfur+'%');
+  }
+  if (type === 'drain') {
+    if (data.observation_type) rows += row('Type', data.observation_type);
+    if (data.water_table_depth != null) rows += row('Water table', data.water_table_depth+'"');
+    if (data.tile_condition) rows += row('Tile condition', data.tile_condition);
+  }
+  if (data.notes) rows += row('Notes', data.notes);
+
+  content.innerHTML = rows;
+  card.classList.add('open');
+}
+
+function row(k, v) { return `<div class="mbc-row"><span class="mbc-k">${k}</span><span class="mbc-v">${v}</span></div>`; }
+function closeMapCard() { document.getElementById('map-card').classList.remove('open'); }
+
+function startWatchingLocation() {
+  if (watchId) return;
+  if (!navigator.geolocation) return;
+  watchId = navigator.geolocation.watchPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    if (!userMarker) {
+      const el = document.createElement('div');
+      el.style.cssText = 'width:18px;height:18px;border-radius:50%;background:#2979FF;border:3px solid #fff;box-shadow:0 0 0 6px rgba(41,121,255,.25)';
+      userMarker = new mapboxgl.Marker({element:el}).setLngLat([lng,lat]).addTo(mapInstance);
+    } else {
+      userMarker.setLngLat([lng,lat]);
+    }
+  }, null, {enableHighAccuracy:true, maximumAge:5000});
+}
+
+function locateMe() {
+  if (!mapInstance || !userMarker) { toast('Getting location...'); return; }
+  mapInstance.flyTo({ center: userMarker.getLngLat(), zoom: 16, speed: 1.5 });
+}
+
+// ── LOG ────────────────────────────────────────────────────────────────────────
+function setLogTab(tab, el) {
+  logTab = tab;
+  document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderLog();
+}
+
+async function renderLog() {
+  const el = document.getElementById('log-list');
+  el.innerHTML = '<div class="empty">Loading...</div>';
+  try {
+    let items = [];
+    if (logTab === 'all' || logTab === 'scout' || logTab === 'flags') {
+      const q = logTab === 'flags' ? '' : '';
+      const scouts = await sb.get('scout_points');
+      const allObs = await sb.get('observations', 'select=scout_point_id,threshold,species,type,photo_url');
+      let filtered = scouts || [];
+      if (logTab === 'flags') filtered = filtered.filter(p => (allObs||[]).some(o => o.scout_point_id===p.id && o.threshold==='above'));
+      filtered.forEach(p => {
+        const obs = (allObs||[]).filter(o=>o.scout_point_id===p.id);
+        items.push({...p, _type:'scout', _obs:obs});
+      });
+    }
+    if (logTab === 'all' || logTab === 'soil') {
+      const s = await sb.get('soil_samples');
+      (s||[]).forEach(r => items.push({...r, _type:'soil'}));
+    }
+    if (logTab === 'all' || logTab === 'tissue') {
+      const t = await sb.get('tissue_samples');
+      (t||[]).forEach(r => items.push({...r, _type:'tissue'}));
+    }
+    if (logTab === 'all' || logTab === 'drain') {
+      const d = await sb.get('drainage_obs');
+      (d||[]).forEach(r => items.push({...r, _type:'drain'}));
+    }
+    items.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    if (!items.length) { el.innerHTML = '<div class="empty">No entries yet</div>'; return; }
+    el.innerHTML = items.map(item => {
+      const gps = item.gps_lat ? `${parseFloat(item.gps_lat).toFixed(5)}, ${parseFloat(item.gps_lng).toFixed(5)}` : 'No GPS';
+      let tags = '';
+      if (item._type === 'scout') {
+        tags = (item._obs||[]).filter(o=>o.species).map(o =>
+          `<span class="ltag${o.threshold==='above'?' flag':''}">${o.species}${o.threshold==='above'?' ⚑':''}</span>`).join('');
+        const photos = (item._obs||[]).filter(o=>o.photo_url).map(o=>`<img style="width:52px;height:52px;object-fit:cover;border-radius:6px" src="${o.photo_url}" loading="lazy">`).join('');
+        if (photos) tags += `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">${photos}</div>`;
+      }
+      if (item._type === 'soil') tags = `<span class="ltag soil">Soil · pH ${item.ph||'—'} · P ${item.phosphorus||'—'} · K ${item.potassium||'—'}</span>`;
+      if (item._type === 'tissue') tags = `<span class="ltag tissue">Tissue · N ${item.nitrogen||'—'}% · P ${item.phosphorus||'—'}% · K ${item.potassium||'—'}%</span>`;
+      if (item._type === 'drain') tags = `<span class="ltag drain">${item.observation_type||'Drainage'}</span>`;
+      return `<div class="log-item">
+        <div class="litop"><span class="lifn">${item.field_name}</span><span class="lidate">${item.date}</span></div>
+        <div class="ligps">${gps}${item.growth_stage?' · '+item.growth_stage:''}</div>
+        ${tags ? `<div class="litags">${tags}</div>` : ''}
+        ${item.notes ? `<div class="linote">${item.notes}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = '<div class="empty">Could not load log</div>'; }
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+async function exportCSV() {
+  toast('Building export...');
+  try {
+    const [scouts, allObs, soils, tissues, drains] = await Promise.all([
+      sb.get('scout_points'), sb.get('observations'),
+      sb.get('soil_samples'), sb.get('tissue_samples'), sb.get('drainage_obs')
+    ]);
+    const q = v => `"${String(v||'').replace(/"/g,'""')}"`;
+    let csv = 'Type,Date,Field,Crop,GPS Lat,GPS Lng,Detail 1,Detail 2,Detail 3,Notes\n';
+    (scouts||[]).forEach(p => {
+      const obs = (allObs||[]).filter(o=>o.scout_point_id===p.id);
+      if (!obs.length) csv += [q('scout'),q(p.date),q(p.field_name),q(p.crop),q(p.gps_lat),q(p.gps_lng),q(p.growth_stage),q(p.stand_count),'',q(p.notes)].join(',')+'\n';
+      else obs.forEach(o => csv += [q('scout'),q(p.date),q(p.field_name),q(p.crop),q(p.gps_lat),q(p.gps_lng),q(o.type+': '+o.species),q('threshold: '+o.threshold),q(o.count+' '+o.count_unit),q(p.notes)].join(',')+'\n');
+    });
+    (soils||[]).forEach(s => csv += [q('soil'),q(s.date),q(s.field_name),q(s.crop),q(s.gps_lat),q(s.gps_lng),q('pH: '+s.ph),q('P: '+s.phosphorus+' K: '+s.potassium),q('OM: '+s.organic_matter+'%'),q(s.notes)].join(',')+'\n');
+    (tissues||[]).forEach(t => csv += [q('tissue'),q(t.date),q(t.field_name),q(t.crop),q(t.gps_lat),q(t.gps_lng),q('N: '+t.nitrogen+'%'),q('P: '+t.phosphorus+'% K: '+t.potassium+'%'),q(t.tissue_type),q(t.notes)].join(',')+'\n');
+    (drains||[]).forEach(d => csv += [q('drainage'),q(d.date),q(d.field_name),'',q(d.gps_lat),q(d.gps_lng),q(d.observation_type),q('WTD: '+d.water_table_depth+'"'),q(d.tile_condition),q(d.notes)].join(',')+'\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `field_scout_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast('Export downloaded');
+  } catch(e) { toast('Export failed'); }
+}
+
+// ── JOHN DEERE INTEGRATION ────────────────────────────────────────────────────
+const JD_CLIENT_ID = '0oau9sokmtlHdGUC15d7';
+const JD_REDIRECT_URI = 'https://willowy-faloodeh-897608.netlify.app/callback';
+const JD_BASE = 'https://sandboxapi.deere.com/platform';
+const JD_AUTH_URL = 'https://signin.johndeere.com/oauth2/aus78tnlaysMraFhC1t7/v1/authorize';
+const JD_SCOPES = 'ag1 ag2 ag3 eq1 eq2 org1 org2 files offline_access openid';
+
+async function jdConnect() {
+  // Generate PKCE code verifier and challenge
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  const state = Math.random().toString(36).slice(2);
+
+  localStorage.setItem('jd_oauth_state', state);
+  localStorage.setItem('jd_code_verifier', codeVerifier);
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: JD_CLIENT_ID,
+    redirect_uri: JD_REDIRECT_URI,
+    scope: JD_SCOPES,
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256'
+  });
+  window.location.href = `${JD_AUTH_URL}?${params.toString()}`;
+}
+
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function jdDisconnect() {
+  if (!confirm('Disconnect John Deere? Field data already synced will remain.')) return;
+  localStorage.removeItem('jd_access_token');
+  localStorage.removeItem('jd_refresh_token');
+  localStorage.removeItem('jd_token_expiry');
+  localStorage.removeItem('jd_connected');
+  initJDScreen();
+  toast('John Deere disconnected');
+}
+
+function jdIsConnected() {
+  return localStorage.getItem('jd_connected') === 'true' && !!localStorage.getItem('jd_access_token');
+}
+
+async function jdGetToken() {
+  const expiry = parseInt(localStorage.getItem('jd_token_expiry') || '0');
+  const now = Date.now();
+  // Refresh if within 5 min of expiry
+  if (expiry - now < 300000) {
+    const refreshToken = localStorage.getItem('jd_refresh_token');
+    if (!refreshToken) throw new Error('Session expired — please reconnect John Deere');
+    const res = await fetch('/.netlify/functions/jd-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: refreshToken })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error('Could not refresh JD session');
+    localStorage.setItem('jd_access_token', data.access_token);
+    if (data.refresh_token) localStorage.setItem('jd_refresh_token', data.refresh_token);
+    localStorage.setItem('jd_token_expiry', Date.now() + (data.expires_in * 1000));
+  }
+  return localStorage.getItem('jd_access_token');
+}
+
+// Fetch all pages from a JD API endpoint automatically
+async function jdAPIAll(path, progressCallback = null) {
+  let allValues = [];
+  let nextPath = path;
+  let page = 1;
+  while (nextPath) {
+    const data = await jdAPI(nextPath);
+    const values = data.values || [];
+    allValues = [...allValues, ...values];
+    if (progressCallback) progressCallback(allValues.length);
+    // Find next page link — pass full URL directly
+    const nextLink = (data.links || []).find(l => l.rel === 'nextPage');
+    if (nextLink && nextLink.uri) {
+      nextPath = nextLink.uri; // pass full URL, proxy handles it
+    } else {
+      nextPath = null;
+    }
+    page++;
+    // Safety limit — no endpoint should have more than 500 pages
+    if (page > 500) break;
+  }
+  return allValues;
+}
+
+async function jdAPI(path, method = 'GET', body = null) {
+  const token = await jdGetToken();
+  const res = await fetch('/.netlify/functions/jd-api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, method, body, token })
+  });
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    if (!res.ok) throw new Error(data.error || `JD API error ${res.status}`);
+    return data;
+  } catch(e) {
+    throw new Error('API error: ' + text.slice(0, 200));
+  }
+}
+
+function initJDScreen() {
+  const connected = jdIsConnected();
+  document.getElementById('jd-status-title').textContent = connected ? '✅ Connected to Operations Center' : 'Not connected';
+  document.getElementById('jd-status-sub').textContent = connected ? 'Tap sync to import your latest fields' : 'Connect to sync fields from Operations Center';
+  document.getElementById('jd-connect-btn').style.display = connected ? 'none' : 'block';
+  document.getElementById('jd-disconnect-btn').style.display = connected ? 'block' : 'none';
+  document.getElementById('jd-sync-section').style.display = connected ? 'block' : 'none';
+  // Update home button indicator
+  const btn = document.getElementById('jd-home-btn');
+  if (btn) btn.textContent = connected ? '🚜✓' : '🚜';
+}
+
+async function jdSyncFields() {
+  const btn = document.getElementById('jd-sync-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  const orgsEl = document.getElementById('jd-orgs-list');
+  const fieldsEl = document.getElementById('jd-fields-list');
+  const importAllBtn = document.getElementById('jd-import-all-btn');
+  const opsBtn = document.getElementById('jd-ops-btn');
+  orgsEl.innerHTML = '';
+  fieldsEl.innerHTML = '';
+  importAllBtn.style.display = 'none';
+  opsBtn.style.display = 'none';
+
+  try {
+    toast('Fetching organizations...');
+    const orgs = await jdAPIAll('/organizations');
+    if (!orgs.length) {
+      fieldsEl.innerHTML = '<div class="empty">No organizations found.</div>';
+      return;
+    }
+
+    // Store orgs on state for later use
+    state.jdOrgs = orgs;
+
+    orgsEl.innerHTML = `<div class="sl" style="padding-top:4px">Organizations (${orgs.length})</div>` +
+      orgs.map(o => `<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text2)">🏢 ${o.name}</div>`).join('');
+
+    toast('Fetching fields...');
+    let allJDFields = [];
+    for (const org of orgs) {
+      try {
+        const orgId = org.id || org['@id']?.split('/').pop();
+        if (!orgId) continue;
+        const fields = await jdAPIAll(`/organizations/${orgId}/fields`,
+          count => toast(`Fetching fields... (${allJDFields.length + count} so far)`));
+        fields.forEach(f => { f._orgName = org.name; f._orgId = orgId; });
+        allJDFields = [...allJDFields, ...fields];
+      } catch(e) {
+        console.warn(`Could not fetch fields for org ${org.name}:`, e.message);
+      }
+    }
+
+    if (!allJDFields.length) {
+      fieldsEl.innerHTML = '<div class="empty">No fields found.</div>';
+      return;
+    }
+
+    // Store on state for bulk import
+    state.jdFields = allJDFields;
+
+    const existingFields = await sb.get('fields');
+    const existingJDIds = new Set((existingFields || []).map(f => f.jd_field_id).filter(Boolean));
+    const existingNames = new Set((existingFields || []).map(f => f.name.toLowerCase()));
+
+    const newFields = allJDFields.filter(f => {
+      const jdId = f.id || f['@id']?.split('/').pop();
+      const name = f.name || f.fieldName || '';
+      return !existingJDIds.has(jdId) && !existingNames.has(name.toLowerCase());
+    });
+
+    fieldsEl.innerHTML = `<div class="sl">Fields from Operations Center (${allJDFields.length} total, ${newFields.length} new)</div>` +
+      allJDFields.map(f => {
+        const jdId = f.id || f['@id']?.split('/').pop();
+        const name = f.name || f.fieldName || '---';
+        const alreadyImported = existingJDIds.has(jdId) || existingNames.has(name.toLowerCase());
+        const crop = guessCropFromJD(f);
+        const acres = f.area ? (f.area.value * (f.area.unit === 'ha' ? 2.471 : 1)).toFixed(1) : '';
+        return `<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px">
+          <div class="ficon ${crop}">${CROP_ICONS[crop]||'🌱'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="fname">${name}</div>
+            <div class="fmeta">${f._orgName || ''}${acres ? ' · ' + acres + ' ac' : ''}</div>
+          </div>
+          ${alreadyImported
+            ? '<span style="font-size:12px;color:var(--text3);white-space:nowrap">✓ Added</span>'
+            : `<button class="btn btn-sm btn-p" onclick="importJDField(this,'${encodeURIComponent(JSON.stringify({name,crop,jdId,orgId:f._orgId,orgName:f._orgName,acres:parseFloat(acres)||null}))}')">Import</button>`
+          }
+        </div>`;
+      }).join('');
+
+    if (newFields.length > 0) {
+      importAllBtn.style.display = 'block';
+    }
+    opsBtn.style.display = 'block';
+    toast(`Found ${allJDFields.length} fields (${newFields.length} new)`);
+
+  } catch(e) {
+    toast('Sync failed — ' + e.message);
+    fieldsEl.innerHTML = `<div class="empty" style="color:var(--red)">${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync fields from Operations Center';
+  }
+}
+
+async function jdImportAll() {
+  const btn = document.getElementById('jd-import-all-btn');
+  if (!state.jdFields || !state.jdFields.length) { toast('Run sync first'); return; }
+  if (!confirm(`Import all new fields from Operations Center?`)) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Importing...';
+
+  const existingFields = await sb.get('fields');
+  const existingJDIds = new Set((existingFields || []).map(f => f.jd_field_id).filter(Boolean));
+  const existingNames = new Set((existingFields || []).map(f => f.name.toLowerCase()));
+
+  let imported = 0;
+  let skipped = 0;
+  for (const f of state.jdFields) {
+    const jdId = f.id || f['@id']?.split('/').pop();
+    const name = f.name || f.fieldName || '---';
+    if (existingJDIds.has(jdId) || existingNames.has(name.toLowerCase())) { skipped++; continue; }
+    const crop = guessCropFromJD(f);
+    const acres = f.area ? (f.area.value * (f.area.unit === 'ha' ? 2.471 : 1)) : null;
+    try {
+      await sb.insert('fields', { name, crop, jd_field_id: jdId, jd_org_id: f._orgId, jd_org_name: f._orgName, acres });
+      imported++;
+      btn.textContent = `⏳ Importing... (${imported})`;
+    } catch(e) {
+      console.warn('Could not import field', name, e.message);
+    }
+  }
+
+  toast(`Imported ${imported} fields${skipped ? `, ${skipped} already existed` : ''}`);
+  btn.disabled = false;
+  btn.textContent = '⬇️ Import All Fields';
+  btn.style.display = 'none';
+  jdSyncFields(); // refresh list
+}
+
+async function jdSyncOperations() {
+  const btn = document.getElementById('jd-ops-btn');
+  const progress = document.getElementById('jd-progress');
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing operations...';
+  progress.style.display = 'block';
+  progress.textContent = 'Starting sync...';
+
+  try {
+    // Get all fields from our app that have JD IDs
+    const appFields = await sb.get('fields');
+    const jdFields = (appFields || []).filter(f => f.jd_field_id && f.jd_org_id);
+
+    if (!jdFields.length) {
+      toast('Import fields from JD first');
+      return;
+    }
+
+    let boundaryCount = 0;
+    let operationCount = 0;
+
+    for (const field of jdFields) {
+      progress.textContent = `Syncing ${field.name}... (${boundaryCount} boundaries, ${operationCount} operations so far)`;
+
+      // Fetch boundary
+      try {
+        const boundaryData = await jdAPIAll(`/organizations/${field.jd_org_id}/fields/${field.jd_field_id}/boundaries`);
+        if (boundaryData.length > 0) {
+          const boundary = boundaryData[0];
+          await sb.update('fields', field.id, { boundary: boundary });
+          boundaryCount++;
+        }
+      } catch(e) {
+        console.warn(`Boundary fetch failed for ${field.name}:`, e.message);
+      }
+
+      // Fetch field operations
+      try {
+        const ops = await jdAPIAll(`/organizations/${field.jd_org_id}/fields/${field.jd_field_id}/fieldOperations`);
+        for (const op of ops) {
+          const opId = op.id || op['@id']?.split('/').pop();
+          const opType = guessOperationType(op);
+          try {
+            await sb.insert('jd_operations', {
+              field_id: field.id,
+              field_name: field.name,
+              jd_operation_id: opId,
+              operation_type: opType,
+              start_date: op.startDate || op.date || null,
+              end_date: op.endDate || null,
+              crop: op.crop?.cropName || null,
+              variety: op.variety?.name || op.seedLotName || null,
+              area_applied: op.area?.value || null,
+              seeding_rate: op.seedingRate?.value || null,
+              dry_yield: op.dryYield?.value || null,
+              moisture: op.moisture?.value || null,
+              product: op.product?.name || null,
+              rate: op.rate?.value || null,
+              rate_unit: op.rate?.unit || null,
+              raw: op
+            });
+            operationCount++;
+          } catch(e) {
+            // Skip duplicates (jd_operation_id unique constraint)
+            if (!e.message.includes('duplicate') && !e.message.includes('unique')) {
+              console.warn('Op insert error:', e.message);
+            }
+          }
+        }
+      } catch(e) {
+        console.warn(`Operations fetch failed for ${field.name}:`, e.message);
+      }
+    }
+
+    progress.textContent = `✅ Done — ${boundaryCount} boundaries, ${operationCount} operations synced`;
+    toast(`Sync complete — ${boundaryCount} boundaries, ${operationCount} operations`);
+
+  } catch(e) {
+    toast('Sync failed — ' + e.message);
+    progress.textContent = '❌ ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📊 Sync Field Operations & Boundaries';
+  }
+}
+
+async function importJDField(btn, encodedField) {
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const field = JSON.parse(decodeURIComponent(encodedField));
+    await sb.insert('fields', {
+      name: field.name,
+      crop: field.crop,
+      jd_field_id: field.jdId,
+      jd_org_id: field.orgId,
+      jd_org_name: field.orgName,
+      acres: field.acres
+    });
+    btn.textContent = '✓ Added';
+    btn.style.background = 'var(--green-dark)';
+    toast(`${field.name} added`);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Import';
+    toast('Could not import field');
+  }
+}
+
+function guessOperationType(op) {
+  const type = (op['@type'] || op.type || op.operationType || '').toLowerCase();
+  if (type.includes('plant') || type.includes('seed')) return 'planting';
+  if (type.includes('harvest')) return 'harvest';
+  if (type.includes('apply') || type.includes('application') || type.includes('spray')) return 'application';
+  if (type.includes('till')) return 'tillage';
+  return 'other';
+}
+
+function guessCropFromJD(field) {
+  const name = (field.name || field.cropSeason || '').toLowerCase();
+  if (name.includes('corn') || name.includes('maize')) return 'corn';
+  if (name.includes('soy') || name.includes('bean')) return 'soybeans';
+  if (name.includes('wheat')) return 'wheat';
+  const crop = (field.cropSeason || field.crop || '').toLowerCase();
+  if (crop.includes('corn')) return 'corn';
+  if (crop.includes('soy')) return 'soybeans';
+  if (crop.includes('wheat')) return 'wheat';
+  return 'corn';
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Auto login if token saved
+if (localStorage.getItem('fs_token')) {
+  showScreen('screen-home');
+} else {
+  document.getElementById('screen-auth').classList.add('active');
+}
+</script>
+</body>
+</html>
