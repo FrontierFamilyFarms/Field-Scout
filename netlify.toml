@@ -1,0 +1,8 @@
+[build]
+  publish = "field-scout"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/callback"
+  to = "/callback.html"
+  status = 200
