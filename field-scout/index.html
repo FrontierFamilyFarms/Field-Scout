@@ -1247,26 +1247,21 @@ async function jdGetToken() {
 
 async function jdAPI(path, method = 'GET', body = null) {
   const token = await jdGetToken();
-  // Use root discovery for base path, or construct full URL
-  const url = path.startsWith('http') ? path : `${JD_BASE}${path}`;
-  const res = await fetch(url, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/vnd.deere.axiom.v3+json',
-      'Content-Type': 'application/json'
-    },
-    body: body ? JSON.stringify(body) : undefined
+  const res = await fetch('/.netlify/functions/jd-api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, method, body, token })
   });
-  if (!res.ok) {
-    const text = await res.text();
-    let err;
-    try { err = JSON.parse(text); } catch { err = { message: text.slice(0, 200) }; }
-    throw new Error(err.message || err.error || `JD API error ${res.status}: ${text.slice(0,100)}`);
-  }
   const text = await res.text();
-  try { return JSON.parse(text); } catch { throw new Error('JD API returned non-JSON: ' + text.slice(0, 200)); }
+  try {
+    const data = JSON.parse(text);
+    if (!res.ok) throw new Error(data.error || `JD API error ${res.status}`);
+    return data;
+  } catch(e) {
+    throw new Error('API error: ' + text.slice(0, 200));
+  }
 }
+
 
 function initJDScreen() {
   const connected = jdIsConnected();
