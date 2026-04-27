@@ -1606,7 +1606,7 @@ async function analyticsRefresh() {
   try {
     // Load summary stats
     const [ops, fields] = await Promise.all([
-      sb.get('jd_operations', 'select=id,operation_type,start_date,field_name,crop,variety,product'),
+      sb.get('jd_operations', 'select=id,operation_type,start_date,field_name,crop,variety,product&limit=10000'),
       sb.get('fields', 'select=id,name,acres')
     ]);
 
