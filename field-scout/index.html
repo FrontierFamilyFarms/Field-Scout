@@ -535,7 +535,7 @@ const sb = {
       return data;
     } catch(e) { setSyncDot('err'); throw e; }
   },
-  async get(table, q='') { return this.req('GET', `/rest/v1/${table}?${q}&order=created_at.desc`); },
+  async get(table, q='') { return this.req('GET', `/rest/v1/${table}?${q}&order=created_at.desc&limit=10000`); },
   async insert(table, data) { return this.req('POST', `/rest/v1/${table}`, data); },
   async update(table, id, data) { return this.req('PATCH', `/rest/v1/${table}?id=eq.${id}`, data); },
   async delete(table, id) { return this.req('DELETE', `/rest/v1/${table}?id=eq.${id}`); },
