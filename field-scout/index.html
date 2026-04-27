@@ -555,6 +555,24 @@ const sb = {
   }
 };
 
+// Fetch a specific range of rows from Supabase
+async function sbGetRange(table, q, from, to) {
+  try {
+    setSyncDot('sync');
+    const res = await fetch(`${SB_URL}/rest/v1/${table}?${q}&order=created_at.desc`, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + authToken,
+        'Content-Type': 'application/json',
+        'Range': `${from}-${to}`
+      }
+    });
+    const data = await res.json().catch(() => ([]));
+    setSyncDot('ok');
+    return Array.isArray(data) ? data : [];
+  } catch(e) { setSyncDot('err'); return []; }
+}
+
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 let authMode = 'signin';
 function toggleAuth() {
@@ -1604,23 +1622,31 @@ async function initAnalytics() {
 
 async function analyticsRefresh() {
   try {
-    // Load summary stats
-    const [ops, fields] = await Promise.all([
-      sb.get('jd_operations', 'select=id,operation_type,start_date,field_name,crop,variety,product'),
-      sb.get('fields', 'select=id,name,acres')
-    ]);
+    // Load all operations using pagination
+    let allOps = [];
+    let from = 0;
+    const pageSize = 1000;
+    while (true) {
+      const page = await sbGetRange('jd_operations', 
+        'select=id,operation_type,start_date,field_name,crop,variety,product',
+        from, from + pageSize - 1);
+      if (!page || !page.length) break;
+      allOps = [...allOps, ...page];
+      if (page.length < pageSize) break;
+      from += pageSize;
+    }
 
-    analyticsData = { ops: ops || [], fields: fields || [] };
+    const fields = await sb.get('fields', 'select=id,name,acres');
+    analyticsData = { ops: allOps, fields: fields || [] };
 
     renderAnalyticsStats(analyticsData);
     renderYearChart(analyticsData);
     renderFieldChart(analyticsData);
     renderRecentOps(analyticsData);
 
-    // Welcome message if first load
     const msgs = document.getElementById('ai-messages');
     if (!msgs.children.length) {
-      addAIMessage('assistant', `I have access to ${(ops||[]).length.toLocaleString()} operations across ${(fields||[]).length} fields going back to ${getEarliestYear(ops)}. Ask me anything about your operation!`);
+      addAIMessage('assistant', `I have access to ${allOps.length.toLocaleString()} operations across ${(fields||[]).length} fields going back to ${getEarliestYear(allOps)}. Ask me anything about your operation!`);
     }
   } catch(e) {
     console.error('Analytics load error:', e);
