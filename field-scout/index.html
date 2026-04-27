@@ -525,8 +525,7 @@ const sb = {
           'apikey': SB_KEY,
           'Authorization': 'Bearer ' + (useToken ? authToken : SB_KEY),
           'Content-Type': 'application/json',
-          'Prefer': method === 'POST' ? 'return=representation' : ''
-          'Range': method === 'GET' ? '0-9999' : undefined
+          'Prefer': method === 'POST' ? 'return=representation' : '
         },
         body: body ? JSON.stringify(body) : undefined
       });
