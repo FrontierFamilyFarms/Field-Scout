@@ -572,7 +572,22 @@ async function sbGetRange(table, q, from, to) {
     return Array.isArray(data) ? data : [];
   } catch(e) { setSyncDot('err'); return []; }
 }
-
+async function sbGetRange(table, q, from, to) {
+  try {
+    setSyncDot('sync');
+    const res = await fetch(`${SB_URL}/rest/v1/${table}?${q}&order=created_at.desc`, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + authToken,
+        'Content-Type': 'application/json',
+        'Range': `${from}-${to}`
+      }
+    });
+    const data = await res.json().catch(() => ([]));
+    setSyncDot('ok');
+    return Array.isArray(data) ? data : [];
+  } catch(e) { setSyncDot('err'); return []; }
+}
 // ── AUTH ─────────────────────────────────────────────────────────────────────
 let authMode = 'signin';
 function toggleAuth() {
