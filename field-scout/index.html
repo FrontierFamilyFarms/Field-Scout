@@ -525,7 +525,7 @@ const sb = {
           'apikey': SB_KEY,
           'Authorization': 'Bearer ' + (useToken ? authToken : SB_KEY),
           'Content-Type': 'application/json',
-          'Prefer': method === 'POST' ? 'return=representation' : '
+          'Prefer': method === 'POST' ? 'return=representation' : ''
         },
         body: body ? JSON.stringify(body) : undefined
       });
@@ -535,7 +535,7 @@ const sb = {
       return data;
     } catch(e) { setSyncDot('err'); throw e; }
   },
-  async get(table, q='') { return this.req('GET', `/rest/v1/${table}?${q}&order=created_at.desc&limit=10000`); },
+  async get(table, q='') { return this.req('GET', `/rest/v1/${table}?${q}&order=created_at.desc`); },
   async insert(table, data) { return this.req('POST', `/rest/v1/${table}`, data); },
   async update(table, id, data) { return this.req('PATCH', `/rest/v1/${table}?id=eq.${id}`, data); },
   async delete(table, id) { return this.req('DELETE', `/rest/v1/${table}?id=eq.${id}`); },
@@ -1606,7 +1606,7 @@ async function analyticsRefresh() {
   try {
     // Load summary stats
     const [ops, fields] = await Promise.all([
-      sb.get('jd_operations', 'select=id,operation_type,start_date,field_name,crop,variety,product&limit=10000'),
+      sb.get('jd_operations', 'select=id,operation_type,start_date,field_name,crop,variety,product'),
       sb.get('fields', 'select=id,name,acres')
     ]);
 
