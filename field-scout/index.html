@@ -1808,12 +1808,10 @@ Field list: ${fields.map(f => f.name + (f.acres ? ' ('+f.acres.toFixed(0)+' ac)'
 
 Answer the user's question concisely and agronomically. Use specific numbers from the data. Keep responses under 150 words.`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/.netlify/functions/ai-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
         system: context,
         messages: [{ role: 'user', content: q }]
       })
