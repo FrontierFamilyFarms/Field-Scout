@@ -526,6 +526,7 @@ const sb = {
           'Authorization': 'Bearer ' + (useToken ? authToken : SB_KEY),
           'Content-Type': 'application/json',
           'Prefer': method === 'POST' ? 'return=representation' : ''
+          'Range': '0-9999'
         },
         body: body ? JSON.stringify(body) : undefined
       });
