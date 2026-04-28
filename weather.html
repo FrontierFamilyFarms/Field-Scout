@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frontier Family Farms — Weather Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e1008; --surface: #161a0e; --surface2: #1d2212;
+    --border: rgba(139,174,58,0.18); --border2: rgba(139,174,58,0.35);
+    --green: #8bae3a; --green-dim: #5a7222; --green-bright: #acd44a;
+    --amber: #d4931a; --red: #c45a3a;
+    --text: #d6e8a0; --text-dim: #7a9440; --text-muted: #4a6228;
+    --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+  .scanline { position: fixed; top:0;left:0;right:0;bottom:0; background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px); pointer-events:none; z-index:100; }
+  header { border-bottom:1px solid var(--border); padding:1.5rem 2rem; display:flex; align-items:center; justify-content:space-between; background:var(--surface); }
+  .logo-name { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:var(--green); }
+  .logo-sub { font-family:var(--mono); font-size:10px; color:var(--text-muted); letter-spacing:0.08em; margin-top:2px; }
+  .status-pill { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; color:var(--text-dim); background:var(--surface2); border:1px solid var(--border); padding:6px 14px; border-radius:2px; }
+  .status-dot { width:7px; height:7px; border-radius:50%; background:var(--text-muted); transition:background 0.3s; }
+  .status-dot.live { background:var(--green-bright); box-shadow:0 0 6px var(--green); animation:blink 2s infinite; }
+  .status-dot.error { background:var(--red); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .main { padding:2rem; max-width:1100px; margin:0 auto; }
+  .metrics-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; border:1px solid var(--border); margin-bottom:2rem; background:var(--border); }
+  .metric { background:var(--surface); padding:1.25rem 1.5rem; display:flex; flex-direction:column; gap:6px; }
+  .metric-label { font-family:var(--mono); font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--text-muted); }
+  .metric-value { font-family:var(--mono); font-size:28px; font-weight:500; color:var(--green-bright); line-height:1; transition:color 0.3s; }
+  .metric-value.updating { color:var(--amber); }
+  .metric-unit { font-size:13px; color:var(--text-dim); margin-left:3px; }
+  .controls { display:flex; align-items:center; gap:10px; margin-bottom:1.5rem; flex-wrap:wrap; }
+  button { font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; padding:8px 18px; border:1px solid var(--border2); background:transparent; color:var(--text-dim); cursor:pointer; border-radius:2px; transition:all 0.15s; }
+  button:hover { background:var(--surface2); color:var(--green); border-color:var(--green-dim); }
+  button.active { background:var(--green-dim); color:var(--green-bright); border-color:var(--green); }
+  button.fetch-btn { color:var(--green-bright); border-color:var(--green); }
+  button.fetch-btn:hover { background:rgba(139,174,58,0.12); }
+  button.clear-btn { color:var(--red); border-color:rgba(196,90,58,0.4); }
+  button.clear-btn:hover { background:rgba(196,90,58,0.08); }
+  .countdown { font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-left:auto; }
+  .error-bar { font-family:var(--mono); font-size:11px; color:var(--red); background:rgba(196,90,58,0.08); border:1px solid rgba(196,90,58,0.3); padding:10px 16px; margin-bottom:1.5rem; display:none; border-radius:2px; }
+  .table-section { border:1px solid var(--border); overflow:hidden; }
+  .table-header { background:var(--surface); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+  .table-title { font-family:var(--mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-muted); }
+  .row-count { font-family:var(--mono); font-size:10px; color:var(--text-muted); }
+  table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px; table-layout:fixed; }
+  th { background:var(--surface2); color:var(--text-muted); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; padding:9px 16px; text-align:left; border-bottom:1px solid var(--border); font-weight:500; }
+  td { padding:10px 16px; color:var(--text); border-bottom:1px solid rgba(139,174,58,0.07); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--surface2); }
+  tr.latest td { color:var(--green-bright); }
+  .empty-row td { text-align:center; color:var(--text-muted); padding:3rem; font-size:11px; letter-spacing:0.1em; }
+  @media(max-width:700px) { .metrics-grid{grid-template-columns:repeat(2,1fr);} .main{padding:1rem;} header{padding:1rem;} }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<header>
+  <div>
+    <div class="logo-name">Frontier Family Farms</div>
+    <div class="logo-sub">Alden, MN &nbsp;·&nbsp; WeatherLink Live &nbsp;·&nbsp; 30-min interval</div>
+  </div>
+  <div class="status-pill">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Ready</span>
+  </div>
+</header>
+<div class="main">
+  <div class="metrics-grid">
+    <div class="metric"><div class="metric-label">Temperature</div><div class="metric-value" id="mTemp">--<span class="metric-unit">°F</span></div></div>
+    <div class="metric"><div class="metric-label">Humidity</div><div class="metric-value" id="mHumid">--<span class="metric-unit">%</span></div></div>
+    <div class="metric"><div class="metric-label">Rain Today</div><div class="metric-value" id="mRain">--<span class="metric-unit">in</span></div></div>
+    <div class="metric"><div class="metric-label">Wind</div><div class="metric-value" id="mWind">--<span class="metric-unit">mph</span></div></div>
+    <div class="metric"><div class="metric-label">Gust</div><div class="metric-value" id="mGust">--<span class="metric-unit">mph</span></div></div>
+  </div>
+  <div class="controls">
+    <button class="fetch-btn" onclick="fetchNow()">[ Fetch Now ]</button>
+    <button id="autoBtn" onclick="toggleAuto()">[ Start Auto ]</button>
+    <button onclick="exportCSV()">[ Export CSV ]</button>
+    <button class="clear-btn" onclick="clearData()">[ Clear ]</button>
+    <span class="countdown" id="countdown"></span>
+  </div>
+  <div class="error-bar" id="errorBar"></div>
+  <div class="table-section">
+    <div class="table-header">
+      <span class="table-title">Session Log</span>
+      <span class="row-count" id="rowCount">0 readings</span>
+    </div>
+    <table>
+      <colgroup><col style="width:18%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:13%"><col style="width:13%"></colgroup>
+      <thead><tr><th>Time</th><th>Temp °F</th><th>Humidity %</th><th>Rain in</th><th>Wind mph</th><th>Dir</th><th>Gust mph</th></tr></thead>
+      <tbody id="dataBody"><tr class="empty-row"><td colspan="7">No readings yet — click Fetch Now to start</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const PROXY='/.netlify/functions/weatherlink';
+let rows=[],autoInt=null,cdInt=null,nextAt=null;
+function setStatus(s,t){document.getElementById('statusDot').className='status-dot '+(s||'');document.getElementById('statusText').textContent=t;}
+function setError(m){const b=document.getElementById('errorBar');b.style.display=m?'block':'none';b.textContent=m||'';}
+function degToDir(d){return['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];}
+function flash(id){const e=document.getElementById(id);e.classList.add('updating');setTimeout(()=>e.classList.remove('updating'),600);}
+async function fetchWeather(){
+  setStatus('','Fetching...');setError('');
+  try{
+    const res=await fetch(PROXY);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    if(!data.sensors)throw new Error('No sensor data');
+    let temp=null,humid=null,rain=null,ws=null,wd=null,gust=null;
+    for(const s of data.sensors){for(const r of(s.data||[])){
+      if(r.temp!=null&&temp==null)temp=r.temp;
+      if(r.hum!=null&&humid==null)humid=r.hum;
+      if(r.rainfall_day_in!=null&&rain==null)rain=r.rainfall_day_in;
+      if(r.wind_speed_last!=null&&ws==null)ws=r.wind_speed_last;
+      if(r.wind_dir_last!=null&&wd==null)wd=r.wind_dir_last;
+      if(r.wind_speed_hi_last_2_min!=null&&gust==null)gust=r.wind_speed_hi_last_2_min;
+      if(r.wind_speed_hi_last_10_min!=null&&gust==null)gust=r.wind_speed_hi_last_10_min;
+    }}
+    const now=new Date();
+    const ts=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})+' '+now.toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
+    const row={ts,temp:temp!=null?parseFloat(temp).toFixed(1):'--',humid:humid!=null?Math.round(humid):'--',rain:rain!=null?parseFloat(rain).toFixed(2):'--',ws:ws!=null?parseFloat(ws).toFixed(1):'--',wd:wd!=null?degToDir(wd):'--',gust:gust!=null?parseFloat(gust).toFixed(1):'--'};
+    rows.unshift(row);
+    ['mTemp','mHumid','mRain','mWind','mGust'].forEach(flash);
+    document.getElementById('mTemp').innerHTML=row.temp+'<span class="metric-unit">°F</span>';
+    document.getElementById('mHumid').innerHTML=row.humid+'<span class="metric-unit">%</span>';
+    document.getElementById('mRain').innerHTML=row.rain+'<span class="metric-unit">in</span>';
+    document.getElementById('mWind').innerHTML=row.ws+'<span class="metric-unit">mph</span>';
+    document.getElementById('mGust').innerHTML=row.gust+'<span class="metric-unit">mph</span>';
+    renderTable();
+    setStatus('live','Updated '+now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}));
+  }catch(e){setStatus('error','Fetch failed');setError('Error: '+e.message);}
+}
+function renderTable(){
+  document.getElementById('rowCount').textContent=rows.length+' reading'+(rows.length===1?'':'s');
+  if(!rows.length){document.getElementById('dataBody').innerHTML='<tr class="empty-row"><td colspan="7">No readings yet — click Fetch Now to start</td></tr>';return;}
+  document.getElementById('dataBody').innerHTML=rows.map((r,i)=>`<tr class="${i===0?'latest':''}""><td>${r.ts}</td><td>${r.temp}</td><td>${r.humid}</td><td>${r.rain}</td><td>${r.ws}</td><td>${r.wd}</td><td>${r.gust}</td></tr>`).join('');
+}
+function fetchNow(){fetchWeather();}
+function toggleAuto(){
+  const btn=document.getElementById('autoBtn');
+  if(autoInt){clearInterval(autoInt);clearInterval(cdInt);autoInt=null;cdInt=null;nextAt=null;btn.textContent='[ Start Auto ]';btn.classList.remove('active');document.getElementById('countdown').textContent='';}
+  else{fetchWeather();nextAt=Date.now()+30*60*1000;autoInt=setInterval(()=>{fetchWeather();nextAt=Date.now()+30*60*1000;},30*60*1000);cdInt=setInterval(()=>{if(!nextAt)return;const s=Math.max(0,Math.floor((nextAt-Date.now())/1000));document.getElementById('countdown').textContent=`Next in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;},1000);btn.textContent='[ Stop Auto ]';btn.classList.add('active');}
+}
+function clearData(){rows=[];renderTable();const u={mTemp:'°F',mHumid:'%',mRain:'in',mWind:'mph',mGust:'mph'};Object.keys(u).forEach(id=>document.getElementById(id).innerHTML='--<span class="metric-unit">'+u[id]+'</span>');setStatus('','Ready');}
+function exportCSV(){if(!rows.length)return;const csv='Time,Temp (F),Humidity (%),Rain (in),Wind (mph),Dir,Gust (mph)\n'+rows.map(r=>`"${r.ts}",${r.temp},${r.humid},${r.rain},${r.ws},${r.wd},${r.gust}`).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='FFF_weather_'+new Date().toISOString().slice(0,10)+'.csv';a.click();}
+renderTable();
+</script>
+</body>
+</html>
