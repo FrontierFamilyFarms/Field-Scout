@@ -1,9 +1,8 @@
 const crypto = require('crypto');
 
 exports.handler = async (event) => {
-  const API_KEY = process.env.WEATHERLINK_API_KEY;
-  const API_SECRET = process.env.WEATHERLINK_API_SECRET;
-
+  const API_KEY = 'u0u51xplnl2vc65spugxsfsvemzeecqe';
+const API_SECRET = 'uvoecyushmyzxn69byvusvd4ck44jfat';
   try {
     // Step 1: get station ID
     const t = Math.floor(Date.now() / 1000).toString();
