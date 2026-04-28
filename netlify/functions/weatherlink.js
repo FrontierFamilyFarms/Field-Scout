@@ -38,7 +38,21 @@ exports.handler = async (event) => {
     );
     const currentData = await currentRes.json();
 
-    return { statusCode: 200, headers, body: JSON.stringify(currentData) };
+    // Extract ts from the main weather sensor and return it alongside data
+    let dataTs = null;
+    if (currentData.sensors) {
+      for (const s of currentData.sensors) {
+        for (const r of (s.data || [])) {
+          if (r.ts && dataTs == null) dataTs = r.ts;
+        }
+      }
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ ...currentData, _dataTs: dataTs, _fetchedAt: Math.floor(Date.now()/1000) })
+    };
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
