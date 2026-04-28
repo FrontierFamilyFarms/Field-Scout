@@ -1,6 +1,16 @@
 const crypto = require('crypto');
 
 exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
   const API_KEY = process.env.WEATHERLINK_API_KEY;
   const API_SECRET = process.env.WEATHERLINK_API_SECRET;
 
@@ -15,11 +25,7 @@ exports.handler = async (event) => {
     const stationData = await stationRes.json();
 
     if (!stationData.stations || stationData.stations.length === 0) {
-      return {
-        statusCode: 200,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        body: JSON.stringify({ debug: stationData })
-      };
+      return { statusCode: 200, headers, body: JSON.stringify({ debug: stationData }) };
     }
 
     const stationId = stationData.stations[0].station_id;
@@ -32,16 +38,8 @@ exports.handler = async (event) => {
     );
     const currentData = await currentRes.json();
 
-    return {
-      statusCode: 200,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify(currentData),
-    };
+    return { statusCode: 200, headers, body: JSON.stringify(currentData) };
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: err.message }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
