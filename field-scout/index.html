@@ -600,7 +600,8 @@ function compressImage(file) {
 }
 window.addEventListener('online', () => document.getElementById('offbanner').classList.remove('show'));
 window.addEventListener('offline', () => document.getElementById('offbanner').classList.add('show'));
-//  CROP DATA 
+// 
+ CROP DATA 
 const STAGES = {
   corn: ['VE','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','VT','R1 (silk)','R2 (blister)','R3 (milk)','R4 (dough)','R5 (dent)','R6 (black layer)'],
   soybeans: ['VE','VC','V1','V2','V3','V4','V5','V6','R1','R2','R3','R4','R5','R6','R7','R8'],
@@ -609,17 +610,19 @@ const STAGES = {
 const WEEDS = ['Waterhemp','Palmer amaranth','Common ragweed','Giant ragweed','Velvetleaf','Common lambsquarters','Foxtail (giant)','Foxtail (green)','Barnyard grass','Volunteer corn','Wild mustard','Horseweed / Marestail','Buttonweed','Black nightshade','Cocklebur','Morningglory','Other'];
 const INSECTS = ['Corn rootworm (adult)','Black cutworm','European corn borer','Aphids (corn)','Aphids (soybean)','Bean leaf beetle','Japanese beetle','Grasshopper','Spider mite','Slugs','Soybean gall midge','Thistle caterpillar','Western bean cutworm','Thrips','Other'];
 const DISEASES = {
-  corn: ['Gray leaf spot','Northern corn leaf blight','Southern rust','Common smut','Tar spot',"Goss's wilt",'Diplodia ear rot','Gibberella ear rot','Anthracnose stalk rot','Other'],
+  corn: ['Gray leaf spot','Northern corn leaf blight','Southern rust','Common smut','Tar spot','Goss\'s wilt','Diplodia ear rot','Gibberella ear rot','Anthracnose stalk rot','Other'],
   soybeans: ['Sudden death syndrome','White mold','Frogeye leaf spot','Phytophthora root rot','Brown stem rot','SCN','Bean pod mottle virus','Iron deficiency chlorosis','Other'],
   wheat: ['Fusarium head blight (scab)','Stripe rust','Leaf rust','Septoria leaf blotch','Powdery mildew','Barley yellow dwarf','Take-all root rot','Other']
 };
-const CROP_ICONS = { corn: '🌽', soybeans: '🫘', wheat: '🌾' };
- // STATE 
+const CROP_ICONS = { corn: ' ', soybeans: ' ', wheat: ' ' };
+// 
+ STATE 
 let state = { fields: [], obs: [], obsPhotos: {}, gps: {}, obsCounter: 0 };
 let logTab = 'all';
 let mapInstance = null, userMarker = null, watchId = null;
 let mapMarkers = [];
-//  SCREENS 
+// 
+ SCREENS 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -844,8 +847,8 @@ async function saveScout() {
     toast('Scouting point saved'); showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save scouting point'; }
 }
-// FORMS
-// SOIL / TISSUE / DRAIN FORMS 
+// 
+ SOIL / TISSUE / DRAIN FORMS 
 function initForm(prefix) {
   state.gps[prefix] = null;
   const dot = document.getElementById(prefix+'-gdot'), info = document.getElementById(prefix+'-ginfo');
@@ -1134,7 +1137,8 @@ async function exportCSV() {
     toast('Export downloaded');
   } catch(e) { toast('Export failed'); }
 }
-//  JOHN DEERE INTEGRATION 
+// 
+ JOHN DEERE INTEGRATION 
 const JD_CLIENT_ID = '0oau9sokmtlHdGUC15d7';
 const JD_REDIRECT_URI = 'https://willowy-faloodeh-897608.netlify.app/callback';
 const JD_BASE = 'https://sandboxapi.deere.com/platform';
@@ -1324,7 +1328,8 @@ async function jdImportAll() {
   }
 }
   toast(`Imported ${imported} fields${skipped ? `, ${skipped} already existed` : ''}`);
- btn.disabled = false; btn.textContent = '⬇️ Import All Fields'; btn.style.display = 'none';
+  btn.disabled = false; btn.textContent = '
+ Import All Fields'; btn.style.display = 'none';
   jdSyncFields();
 async function jdSyncOperations() {
   const btn = document.getElementById('jd-ops-btn');
@@ -1403,7 +1408,8 @@ function guessCropFromJD(field) {
   if (crop.includes('wheat')) return 'wheat';
   return 'corn';
 }
-//  ANALYTICS 
+// 
+ ANALYTICS 
 let analyticsData = null;
 async function initAnalytics() { await analyticsRefresh(); }
 async function analyticsRefresh() {
@@ -1529,7 +1535,8 @@ function renderRecentOps(data) {
     </div>`;
   }).join('');
 }
-//  AI CHAT 
+// 
+ AI CHAT 
 function addAIMessage(role, text) {
   const el = document.getElementById('ai-messages');
   const isUser = role === 'user';
@@ -1588,9 +1595,11 @@ Answer the user's question concisely and agronomically. Use specific numbers fro
   } catch(e) { addAIMessage('assistant', 'Error: ' + e.message); }
   finally { btn.disabled = false; btn.textContent = 'Ask'; }
 }
-//  SERVICE WORKER 
+// 
+ SERVICE WORKER 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-//  INIT 
+// 
+ INIT 
 if (localStorage.getItem('fs_token')) {
   showScreen('screen-home');
 } else {
@@ -1599,3 +1608,4 @@ if (localStorage.getItem('fs_token')) {
 </script>
 </body>
 </html>
+      
