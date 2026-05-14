@@ -12,7 +12,7 @@
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 <title>Field Scout</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;background:#f5f5f5;color:#1a1a1a;overflow:hidden}
 :root{--green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--amber:#BA7517;--amber-bg:#FAEEDA;--red:#A32D2D;--red-bg:#FCEBEB;--blue:#185FA5;--blue-bg:#E6F1FB;--border:#e0e0e0;--bg:#fff;--bg2:#f8f8f8;--text:#1a1a1a;--text2:#666;--text3:#999;--r:12px;--rsm:8px}
 .app{max-width:520px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
@@ -170,7 +170,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="auth-err" id="auth-err"></div>
       <input type="email" id="auth-email" placeholder="Email address" autocomplete="email">
       <input type="password" id="auth-pw" placeholder="Password" autocomplete="current-password">
-      <button class="btn btn-p btn-w" id="auth-btn">Sign in</button>
+      <button class="btn btn-p btn-w" id="auth-btn" onclick="authSubmit()">Sign in</button>
     </div>
     <div class="auth-switch">Don't have an account? <span onclick="toggleAuth()">Create one</span></div>
   </div>
@@ -555,8 +555,7 @@ async function authSubmit() {
   errEl.classList.remove('show');
   if (!email || !pw) { errEl.textContent = 'Enter email and password'; errEl.classList.add('show'); return; }
   const btn = document.getElementById('auth-btn');
-  btn.disabled = true; btn.textContent = 'Connecting...';
-  errEl.textContent = 'Trying to connect to server...'; errEl.classList.add('show'); errEl.style.background='var(--blue-bg)'; errEl.style.color='var(--blue)';
+  btn.disabled = true; btn.textContent = 'Please wait...';
   try {
     const data = authMode === 'signin' ? await sb.signIn(email, pw) : await sb.signUp(email, pw);
     if (data.access_token) {
@@ -1601,9 +1600,7 @@ Answer the user's question concisely and agronomically. Use specific numbers fro
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 // 
  INIT 
-document.getElementById('auth-btn').addEventListener('click', authSubmit);
-document.getElementById('auth-btn').addEventListener('touchend', function(e){ e.preventDefault(); authSubmit(); });
-  if (localStorage.getItem('fs_token')) {
+if (localStorage.getItem('fs_token')) {
   showScreen('screen-home');
 } else {
   document.getElementById('screen-auth').classList.add('active');
