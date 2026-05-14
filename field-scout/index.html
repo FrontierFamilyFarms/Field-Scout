@@ -1134,8 +1134,7 @@ async function exportCSV() {
     toast('Export downloaded');
   } catch(e) { toast('Export failed'); }
 }
-// 
- JOHN DEERE INTEGRATION 
+//  JOHN DEERE INTEGRATION 
 const JD_CLIENT_ID = '0oau9sokmtlHdGUC15d7';
 const JD_REDIRECT_URI = 'https://willowy-faloodeh-897608.netlify.app/callback';
 const JD_BASE = 'https://sandboxapi.deere.com/platform';
@@ -1405,8 +1404,7 @@ function guessCropFromJD(field) {
   if (crop.includes('wheat')) return 'wheat';
   return 'corn';
 }
-// 
- ANALYTICS 
+//  ANALYTICS 
 let analyticsData = null;
 async function initAnalytics() { await analyticsRefresh(); }
 async function analyticsRefresh() {
@@ -1532,8 +1530,7 @@ function renderRecentOps(data) {
     </div>`;
   }).join('');
 }
-// 
- AI CHAT 
+//  AI CHAT 
 function addAIMessage(role, text) {
   const el = document.getElementById('ai-messages');
   const isUser = role === 'user';
@@ -1592,11 +1589,9 @@ Answer the user's question concisely and agronomically. Use specific numbers fro
   } catch(e) { addAIMessage('assistant', 'Error: ' + e.message); }
   finally { btn.disabled = false; btn.textContent = 'Ask'; }
 }
-// 
- SERVICE WORKER 
+//  SERVICE WORKER 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-// 
- INIT 
+//  INIT 
 if (localStorage.getItem('fs_token')) {
   showScreen('screen-home');
 } else {
