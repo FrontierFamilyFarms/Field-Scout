@@ -886,7 +886,7 @@ async function saveScout() {
     for (const o of state.obs) {
       let photoUrl = null;
       const pd = state.obsPhotos[o.id];
-      if (pd?.file) { try { photoUrl = await sb.uploadPhoto(pd.file, `${point.id}/${o.id}_${Date.now()}.jpg`); } catch(e){} }
+      if (pd?.file) { try { photoUrl = await sb.uploadPhoto(pd.file, `${point.id}/${o.id}_${Date.now()}.jpg`); } catch(e){ toast('Photo upload failed: ' + e.message); } }
       await sb.insert('observations', {
         scout_point_id: point.id, type: o.type, species: o.species||null,
         count: o.count ? parseFloat(o.count) : null, count_unit: o.count_unit||null,
