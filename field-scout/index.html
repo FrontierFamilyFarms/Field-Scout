@@ -1601,7 +1601,9 @@ Answer the user's question concisely and agronomically. Use specific numbers fro
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 // 
  INIT 
-if (localStorage.getItem('fs_token')) {
+document.getElementById('auth-btn').addEventListener('click', authSubmit);
+document.getElementById('auth-btn').addEventListener('touchend', function(e){ e.preventDefault(); authSubmit(); });
+  if (localStorage.getItem('fs_token')) {
   showScreen('screen-home');
 } else {
   document.getElementById('screen-auth').classList.add('active');
