@@ -1324,7 +1324,7 @@ async function jdImportAll() {
   }
 }
   toast(`Imported ${imported} fields${skipped ? `, ${skipped} already existed` : ''}`);
-  btn.disabled = false; btn.textContent = '
+ btn.disabled = false; btn.textContent = '⬇️ Import All Fields'; btn.style.display = 'none';
  Import All Fields'; btn.style.display = 'none';
   jdSyncFields();
 async function jdSyncOperations() {
