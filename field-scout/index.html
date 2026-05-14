@@ -845,7 +845,7 @@ async function saveScout() {
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save scouting point'; }
 }
 // FORMS
- SOIL / TISSUE / DRAIN FORMS 
+// SOIL / TISSUE / DRAIN FORMS 
 function initForm(prefix) {
   state.gps[prefix] = null;
   const dot = document.getElementById(prefix+'-gdot'), info = document.getElementById(prefix+'-ginfo');
