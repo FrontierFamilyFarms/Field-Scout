@@ -38,6 +38,7 @@ input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border
 input:focus,select:focus,textarea:focus{outline:2px solid var(--green);border-color:var(--green)}
 textarea{resize:vertical;min-height:80px;line-height:1.5}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+
 /* Auth */
 .auth-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
 .auth-logo{width:72px;height:72px;background:var(--green);border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;font-size:36px}
@@ -48,6 +49,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .auth-switch span{color:var(--green);cursor:pointer;font-weight:600}
 .auth-err{font-size:13px;color:var(--red);text-align:center;padding:8px;background:var(--red-bg);border-radius:var(--rsm);display:none}
 .auth-err.show{display:block}
+
 /* Home */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px}
 .stat-card{background:var(--bg2);border-radius:var(--rsm);padding:12px 8px;text-align:center}
@@ -64,11 +66,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .fab{position:absolute;bottom:20px;left:16px;right:16px;background:var(--green);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(29,158,117,.3);font-family:inherit}
 .fab:active{background:var(--green-dark)}
 .empty{text-align:center;padding:48px 24px;color:var(--text3);font-size:15px;line-height:1.7}
+
 /* Bottom nav */
 .bnav{display:flex;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
 .bnavbtn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:inherit;color:var(--text3);font-size:10px;font-weight:500}
 .bnavbtn.active{color:var(--green)}
 .bnavbtn svg{width:22px;height:22px}
+
 /* GPS */
 .gps-box{background:var(--bg2);border-radius:var(--rsm);padding:11px;display:flex;align-items:center;gap:10px;margin-top:6px;position:relative;z-index:4}
 .gdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:#ccc}
@@ -76,6 +80,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .ginfo{flex:1;font-size:13px;color:var(--text2);line-height:1.4}
 .gcap{font-size:13px;padding:8px 13px;white-space:nowrap}
+
 /* Obs cards */
 .obs-card{background:var(--bg2);border-radius:var(--r);padding:13px;margin:8px 16px;border:1px solid var(--border);position:relative;z-index:4}
 .obs-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
@@ -96,11 +101,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .photo-preview{width:100%;max-height:160px;object-fit:cover;border-radius:var(--rsm);display:block;margin-top:6px}
 .photo-rm{font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0;display:block}
 .photo-btn{display:flex;align-items:center;gap:5px;font-size:13px;padding:8px 13px;color:var(--green);border-color:rgba(29,158,117,.4)}
+
 /* Nutrient grid */
 .ngrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ngrid input{font-size:14px;padding:8px 10px;position:relative;z-index:6;pointer-events:auto}
 .ngrid .full{grid-column:1/-1}
 .ngrid-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:14px 16px 6px;border-top:1px solid var(--border);margin-top:4px}
+
 /* Log */
 .log-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
 .ltab{flex-shrink:0;padding:11px 14px;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;font-family:inherit;white-space:nowrap}
@@ -118,6 +125,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .ltag.tissue{background:var(--green-light);color:var(--green-dark)}
 .ltag.drain{background:var(--blue-bg);color:var(--blue)}
 .linote{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.5}
+
 /* MAP */
 #map-container{flex:1;position:relative;overflow:hidden}
 #map{position:absolute;inset:0}
@@ -142,11 +150,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .mbc-row:last-child{border:none}
 .mbc-k{color:var(--text2)}.mbc-v{font-weight:500;color:var(--text)}
 .locate-btn{position:absolute;bottom:20px;right:12px;width:44px;height:44px;background:var(--bg);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);font-size:20px;z-index:10}
+
 /* Badge */
 .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
 .bg{background:var(--green-light);color:var(--green-dark)}
 .ba{background:var(--amber-bg);color:var(--amber)}
 .br{background:var(--red-bg);color:var(--red)}
+
 /* Sync / toast / offline */
 .sdot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0}
 .sdot.ok{background:var(--green)}.sdot.err{background:var(--red)}.sdot.sync{background:#FA9A27;animation:pulse 1s infinite}
@@ -160,10 +170,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div class="app">
 <div class="toast" id="toast"></div>
 <div class="offbanner" id="offbanner">Offline — data will sync when reconnected</div>
+
 <!-- ===== AUTH ===== -->
 <div class="screen active" id="screen-auth">
   <div class="auth-wrap">
-    <div class="auth-logo"> </div>
+    <div class="auth-logo">🌱</div>
     <div class="auth-title">Field Scout</div>
     <div class="auth-sub" id="auth-sub">Sign in to your farm account</div>
     <div class="auth-form">
@@ -175,6 +186,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="auth-switch">Don't have an account? <span onclick="toggleAuth()">Create one</span></div>
   </div>
 </div>
+
 <!-- ===== HOME ===== -->
 <div class="screen" id="screen-home">
   <div class="topbar">
@@ -182,8 +194,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="sdot" id="sdot"></div>
     <button class="ibtn" onclick="showScreen('screen-map')">Map</button>
     <button class="ibtn" onclick="showScreen('screen-fields')">Fields</button>
-    <button class="ibtn" onclick="showScreen('screen-analytics')"> </button>
-    <button class="ibtn" onclick="showScreen('screen-jd')" id="jd-home-btn" title="John Deere"> </button>
+    <button class="ibtn" onclick="showScreen('screen-analytics')">📊</button>
+    <button class="ibtn" onclick="showScreen('screen-jd')" id="jd-home-btn" title="John Deere">🚜</button>
   </div>
   <div class="offbanner" id="offbanner2"></div>
   <div class="scroll" style="padding-bottom:80px">
@@ -202,12 +214,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
   <!-- Add menu -->
   <div id="add-menu" style="display:none;position:absolute;bottom:72px;left:16px;right:16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);z-index:50;box-shadow:0 -4px 20px rgba(0,0,0,.12);padding:8px">
-    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-scout-setup')">
-    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-soil-setup')">
-    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-tissue-setup')">
-    <button class="btn btn-w" style="justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-drain-setup')"> Drainage observation</button>
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-scout-setup')">🔍 Scouting point</button>
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-soil-setup')">🧪 Soil sample</button>
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-tissue-setup')">🌿 Tissue sample</button>
+    <button class="btn btn-w" style="justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-drain-setup')">💧 Drainage observation</button>
   </div>
 </div>
+
 <!-- ===== MAP ===== -->
 <div class="screen" id="screen-map">
   <div class="topbar">
@@ -219,12 +232,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div id="map"></div>
     <div class="layer-panel" id="layer-panel">
       <div class="layer-title">Layers</div>
-      <div class="layer-row"><span class="layer-name"> Scouting</span><button class="toggle on" id="tog-scout" onclick="toggleLayer('scout',this)"></button></div>
-      <div class="layer-row"><span class="layer-name"> Soil</span><button class="toggle on" id="tog-soil" onclick="toggleLayer('soil',this)"></button></div>
-      <div class="layer-row"><span class="layer-name"> Tissue</span><button class="toggle on" id="tog-tissue" onclick="toggleLayer('tissue',this)"></button></div>
-      <div class="layer-row"><span class="layer-name"> Drainage</span><button class="toggle on" id="tog-drain" onclick="toggleLayer('drain',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">🔍 Scouting</span><button class="toggle on" id="tog-scout" onclick="toggleLayer('scout',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">🧪 Soil</span><button class="toggle on" id="tog-soil" onclick="toggleLayer('soil',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">🌿 Tissue</span><button class="toggle on" id="tog-tissue" onclick="toggleLayer('tissue',this)"></button></div>
+      <div class="layer-row"><span class="layer-name">💧 Drainage</span><button class="toggle on" id="tog-drain" onclick="toggleLayer('drain',this)"></button></div>
     </div>
-    <button class="locate-btn" onclick="locateMe()" title="Find my location"> </button>
+    <button class="locate-btn" onclick="locateMe()" title="Find my location">📍</button>
     <div class="map-bottom-card" id="map-card">
       <div class="mbc-handle"></div>
       <div id="map-card-content"></div>
@@ -232,6 +245,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
 </div>
+
 <!-- ===== LOG ===== -->
 <div class="screen" id="screen-log">
   <div class="topbar">
@@ -245,10 +259,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <button class="ltab" onclick="setLogTab('soil',this)">Soil</button>
     <button class="ltab" onclick="setLogTab('tissue',this)">Tissue</button>
     <button class="ltab" onclick="setLogTab('drain',this)">Drainage</button>
-    <button class="ltab" onclick="setLogTab('flags',this)"> Flags</button>
+    <button class="ltab" onclick="setLogTab('flags',this)">⚑ Flags</button>
   </div>
   <div class="scroll" id="log-list"></div>
 </div>
+
 <!-- ===== FIELDS ===== -->
 <div class="screen" id="screen-fields">
   <div class="topbar">
@@ -269,6 +284,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
 </div>
+
 <!-- ===== SCOUT SETUP ===== -->
 <div class="screen" id="screen-scout-setup">
   <div class="topbar">
@@ -292,6 +308,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="sc-save" onclick="saveScout()">Save scouting point</button></div>
   </div>
 </div>
+
 <!-- ===== SOIL SETUP ===== -->
 <div class="screen" id="screen-soil-setup">
   <div class="topbar">
@@ -336,6 +353,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="sl-save" onclick="saveSoil()">Save soil sample</button></div>
   </div>
 </div>
+
 <!-- ===== TISSUE SETUP ===== -->
 <div class="screen" id="screen-tissue-setup">
   <div class="topbar">
@@ -371,6 +389,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="ts-save" onclick="saveTissue()">Save tissue sample</button></div>
   </div>
 </div>
+
 <!-- ===== DRAINAGE SETUP ===== -->
 <div class="screen" id="screen-drain-setup">
   <div class="topbar">
@@ -388,14 +407,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="dr-save" onclick="saveDrain()">Save observation</button></div>
   </div>
 </div>
+
 <!-- ===== ANALYTICS DASHBOARD ===== -->
 <div class="screen" id="screen-analytics">
   <div class="topbar">
     <button class="back" onclick="showScreen('screen-home')">&#8592;</button>
     <h2>Analytics</h2>
-    <button class="ibtn" onclick="analyticsRefresh()"> </button>
+    <button class="ibtn" onclick="analyticsRefresh()">↺</button>
   </div>
   <div class="scroll" style="padding-bottom:24px">
+
     <!-- AI Chat -->
     <div style="padding:12px 16px;border-bottom:1px solid var(--border);position:relative;z-index:4">
       <div id="ai-messages" style="min-height:60px;max-height:280px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px"></div>
@@ -410,18 +431,24 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         <button class="btn btn-sm" style="font-size:12px;padding:6px 10px" onclick="askAIQuick('Which fields have the most data?')">Field activity</button>
       </div>
     </div>
+
     <!-- Summary stats -->
     <div class="sl">Operation summary</div>
     <div id="analytics-stats" style="padding:0 16px 8px;display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+
     <!-- Charts -->
     <div class="sl">Operations by year</div>
     <div id="analytics-year-chart" style="padding:0 16px 16px"></div>
+
     <div class="sl">Operations by field</div>
     <div id="analytics-field-chart" style="padding:0 16px 16px"></div>
+
     <div class="sl">Recent operations</div>
     <div id="analytics-recent" style="padding:0 0 16px"></div>
+
   </div>
 </div>
+
 <!-- ===== JD CONNECT SCREEN ===== -->
 <div class="screen" id="screen-jd">
   <div class="topbar">
@@ -429,10 +456,11 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <h2>John Deere</h2>
   </div>
   <div class="scroll" style="padding:16px">
+
     <!-- Connection status card -->
     <div id="jd-status-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="font-size:28px"> </div>
+        <div style="font-size:28px">🚜</div>
         <div>
           <div style="font-size:15px;font-weight:700;color:var(--text)" id="jd-status-title">Not connected</div>
           <div style="font-size:13px;color:var(--text2)" id="jd-status-sub">Connect to sync fields from Operations Center</div>
@@ -441,24 +469,26 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <button class="btn btn-p btn-w" id="jd-connect-btn" onclick="jdConnect()">Connect John Deere Operations Center</button>
       <button class="btn btn-w" id="jd-disconnect-btn" onclick="jdDisconnect()" style="display:none;margin-top:8px;color:var(--red);border-color:var(--red)">Disconnect</button>
     </div>
+
     <!-- Sync fields section — hidden until connected -->
     <div id="jd-sync-section" style="display:none">
       <div class="sl" style="padding-top:0">Operations Center Fields</div>
       <div style="padding:0 0 8px;display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-w" onclick="jdSyncFields()" id="jd-sync-btn">
- Sync fields from Operations Center
+          🔄 Sync fields from Operations Center
         </button>
         <button class="btn btn-p btn-w" onclick="jdImportAll()" id="jd-import-all-btn" style="display:none">
- Import All Fields
+          ⬇️ Import All Fields
         </button>
         <button class="btn btn-w" onclick="jdSyncOperations()" id="jd-ops-btn" style="display:none">
- Sync Field Operations & Boundaries
+          📊 Sync Field Operations & Boundaries
         </button>
       </div>
       <div id="jd-progress" style="display:none;padding:12px 16px;background:var(--green-light);border-radius:var(--r);margin-bottom:8px;font-size:14px;color:var(--green-dark)"></div>
       <div id="jd-orgs-list"></div>
       <div id="jd-fields-list"></div>
     </div>
+
     <!-- Info section -->
     <div style="background:var(--blue-bg);border-radius:var(--r);padding:14px;margin-top:8px">
       <div style="font-size:13px;font-weight:600;color:var(--blue);margin-bottom:6px">What gets synced</div>
@@ -470,18 +500,20 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         • Product/variety data
       </div>
     </div>
+
   </div>
 </div>
+
 <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script>
-// 
- CONFIG 
+// ── CONFIG ───────────────────────────────────────────────────────────────────
 const SB_URL = 'https://eszgxabwboeewycyzzvo.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzemd4YWJ3Ym9lZXd5Y3l6enZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwODA4MzgsImV4cCI6MjA5MDY1NjgzOH0.LAmA0nVG3AyoJXlnvdvcTx3crLOHuW8rKg51cPApsi8';
-// 
- SUPABASE 
+
+// ── SUPABASE ─────────────────────────────────────────────────────────────────
 let authToken = localStorage.getItem('fs_token') || SB_KEY;
+
 const sb = {
   async req(method, path, body, useToken) {
     try {
@@ -521,6 +553,7 @@ const sb = {
     return `${SB_URL}/storage/v1/object/public/scout-photos/${path}`;
   }
 };
+
 async function sbGetRange(table, q, from, to) {
   try {
     setSyncDot('sync');
@@ -537,8 +570,8 @@ async function sbGetRange(table, q, from, to) {
     return Array.isArray(data) ? data : [];
   } catch(e) { setSyncDot('err'); return []; }
 }
-// 
- AUTH 
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
 let authMode = 'signin';
 function toggleAuth() {
   authMode = authMode === 'signin' ? 'signup' : 'signin';
@@ -548,6 +581,7 @@ function toggleAuth() {
     ? "Don't have an account? <span onclick=\"toggleAuth()\">Create one</span>"
     : "Already have an account? <span onclick=\"toggleAuth()\">Sign in</span>";
 }
+
 async function authSubmit() {
   const email = document.getElementById('auth-email').value.trim();
   const pw = document.getElementById('auth-pw').value;
@@ -576,10 +610,11 @@ async function authSubmit() {
   }
   btn.disabled = false; btn.textContent = authMode === 'signin' ? 'Sign in' : 'Create account';
 }
+
 const savedToken = localStorage.getItem('fs_token');
 if (savedToken) { authToken = savedToken; }
-// 
- UTILS 
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
 function setSyncDot(s) { const d = document.getElementById('sdot'); if(d) d.className = 'sdot ' + s; }
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -600,8 +635,8 @@ function compressImage(file) {
 }
 window.addEventListener('online', () => document.getElementById('offbanner').classList.remove('show'));
 window.addEventListener('offline', () => document.getElementById('offbanner').classList.add('show'));
-// 
- CROP DATA 
+
+// ── CROP DATA ─────────────────────────────────────────────────────────────────
 const STAGES = {
   corn: ['VE','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','VT','R1 (silk)','R2 (blister)','R3 (milk)','R4 (dough)','R5 (dent)','R6 (black layer)'],
   soybeans: ['VE','VC','V1','V2','V3','V4','V5','V6','R1','R2','R3','R4','R5','R6','R7','R8'],
@@ -610,19 +645,19 @@ const STAGES = {
 const WEEDS = ['Waterhemp','Palmer amaranth','Common ragweed','Giant ragweed','Velvetleaf','Common lambsquarters','Foxtail (giant)','Foxtail (green)','Barnyard grass','Volunteer corn','Wild mustard','Horseweed / Marestail','Buttonweed','Black nightshade','Cocklebur','Morningglory','Other'];
 const INSECTS = ['Corn rootworm (adult)','Black cutworm','European corn borer','Aphids (corn)','Aphids (soybean)','Bean leaf beetle','Japanese beetle','Grasshopper','Spider mite','Slugs','Soybean gall midge','Thistle caterpillar','Western bean cutworm','Thrips','Other'];
 const DISEASES = {
-  corn: ['Gray leaf spot','Northern corn leaf blight','Southern rust','Common smut','Tar spot','Goss\'s wilt','Diplodia ear rot','Gibberella ear rot','Anthracnose stalk rot','Other'],
+  corn: ['Gray leaf spot','Northern corn leaf blight','Southern rust','Common smut','Tar spot',"Goss's wilt",'Diplodia ear rot','Gibberella ear rot','Anthracnose stalk rot','Other'],
   soybeans: ['Sudden death syndrome','White mold','Frogeye leaf spot','Phytophthora root rot','Brown stem rot','SCN','Bean pod mottle virus','Iron deficiency chlorosis','Other'],
   wheat: ['Fusarium head blight (scab)','Stripe rust','Leaf rust','Septoria leaf blotch','Powdery mildew','Barley yellow dwarf','Take-all root rot','Other']
 };
-const CROP_ICONS = { corn: ' ', soybeans: ' ', wheat: ' ' };
-// 
- STATE 
+const CROP_ICONS = { corn: '🌽', soybeans: '🫘', wheat: '🌾' };
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
 let state = { fields: [], obs: [], obsPhotos: {}, gps: {}, obsCounter: 0 };
 let logTab = 'all';
 let mapInstance = null, userMarker = null, watchId = null;
 let mapMarkers = [];
-// 
- SCREENS 
+
+// ── SCREENS ───────────────────────────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -638,13 +673,14 @@ function showScreen(id) {
   if (id === 'screen-jd') initJDScreen();
   if (id === 'screen-analytics') initAnalytics();
 }
+
 function showAddMenu() {
   const m = document.getElementById('add-menu');
   m.style.display = m.style.display === 'none' ? 'block' : 'none';
 }
 function hideAddMenu() { document.getElementById('add-menu').style.display = 'none'; }
-// 
- HOME 
+
+// ── HOME ──────────────────────────────────────────────────────────────────────
 async function renderHome() {
   try {
     const [fields, scouts, soils, tissues, drains, flags] = await Promise.all([
@@ -665,15 +701,15 @@ async function renderHome() {
     el.innerHTML = state.fields.map(f => {
       const pts = (scouts||[]).filter(p => p.field_id === f.id).length;
       return `<div class="field-row" onclick="startScout('${f.id}')">
-        <div class="ficon ${f.crop}">${CROP_ICONS[f.crop]||' '}</div>
+        <div class="ficon ${f.crop}">${CROP_ICONS[f.crop]||'🌱'}</div>
         <div style="flex:1;min-width:0"><div class="fname">${f.name}</div><div class="fmeta">${f.crop} · ${pts} point${pts!==1?'s':''}</div></div>
         <span class="chev">›</span>
       </div>`;
     }).join('');
   } catch(e) { toast('Could not load — check connection'); }
 }
-// 
- FIELDS 
+
+// ── FIELDS ────────────────────────────────────────────────────────────────────
 async function renderFields() {
   const el = document.getElementById('fields-list');
   try {
@@ -681,12 +717,13 @@ async function renderFields() {
     if (!state.fields.length) { el.innerHTML = '<div class="empty">No fields yet</div>'; return; }
     el.innerHTML = state.fields.map(f => `
       <div style="display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border);gap:12px">
-        <div class="ficon ${f.crop}">${CROP_ICONS[f.crop]||' '}</div>
+        <div class="ficon ${f.crop}">${CROP_ICONS[f.crop]||'🌱'}</div>
         <div style="flex:1"><div class="fname">${f.name}</div><div class="fmeta">${f.crop}</div></div>
         <button style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:24px;padding:4px 8px" onclick="deleteField('${f.id}')">×</button>
       </div>`).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Could not load</div>'; }
 }
+
 async function addField() {
   const name = document.getElementById('nf-name').value.trim();
   const crop = document.getElementById('nf-crop').value;
@@ -694,17 +731,19 @@ async function addField() {
   try { await sb.insert('fields', {name, crop}); document.getElementById('nf-name').value = ''; toast('Field added'); renderFields(); }
   catch(e) { toast('Could not save field'); }
 }
+
 async function deleteField(id) {
   if (!confirm('Delete this field and all data?')) return;
   try { await sb.delete('fields', id); toast('Field deleted'); renderFields(); }
   catch(e) { toast('Could not delete'); }
 }
+
 function populateFieldSelect(selId) {
   const sel = document.getElementById(selId);
   sel.innerHTML = '<option value="">— select —</option>' + state.fields.map(f => `<option value="${f.id}">${f.name} (${f.crop})</option>`).join('');
 }
-// 
- GPS 
+
+// ── GPS ────────────────────────────────────────────────────────────────────────
 function captureGPS(prefix) {
   const dot = document.getElementById(prefix+'-gdot'), info = document.getElementById(prefix+'-ginfo');
   dot.className = 'gdot loading'; info.textContent = 'Getting location...';
@@ -719,8 +758,8 @@ function captureGPS(prefix) {
     { enableHighAccuracy: true, timeout: 12000 }
   );
 }
-// 
- SCOUT 
+
+// ── SCOUT ──────────────────────────────────────────────────────────────────────
 function initScout() {
   state.obs = []; state.obsPhotos = {}; state.obsCounter = 0;
   state.gps['sc'] = null;
@@ -733,10 +772,12 @@ function initScout() {
   populateFieldSelect('sc-field');
   document.getElementById('sc-stage').innerHTML = '<option value="">— select field first —</option>';
 }
+
 function startScout(fieldId) {
   showScreen('screen-scout-setup');
   setTimeout(() => { document.getElementById('sc-field').value = fieldId; onFieldChange('sc'); }, 60);
 }
+
 function onFieldChange(prefix) {
   const selId = prefix + '-field', stageId = prefix + '-stage';
   const fieldId = document.getElementById(selId).value;
@@ -746,6 +787,7 @@ function onFieldChange(prefix) {
   const list = STAGES[field.crop] || [];
   stageSel.innerHTML = '<option value="">— select —</option>' + list.map(s => `<option>${s}</option>`).join('');
 }
+
 // Observations
 function addObs(type) {
   const id = 'obs' + (++state.obsCounter);
@@ -755,9 +797,11 @@ function addObs(type) {
   renderObs();
   setTimeout(() => document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'center'}), 100);
 }
+
 function removeObs(id) { state.obs = state.obs.filter(o => o.id !== id); delete state.obsPhotos[id]; renderObs(); }
 function obsSet(id, key, val) { const o = state.obs.find(o => o.id === id); if(o) o[key] = val; }
 function setThr(id, val) { const o = state.obs.find(o => o.id === id); if(!o) return; o.threshold = o.threshold === val ? '' : val; renderObs(); }
+
 function renderObs() {
   document.getElementById('obs-list').innerHTML = state.obs.map(o => {
     if (o.type === 'weed') return obsCard(o, weedFields(o));
@@ -766,12 +810,13 @@ function renderObs() {
     return '';
   }).join('');
 }
+
 function obsCard(o, fields) {
   const t = o.threshold||'';
   const p = state.obsPhotos[o.id];
   const photoHtml = p?.previewUrl
     ? `<div class="full"><img class="photo-preview" src="${p.previewUrl}"><button class="photo-rm" onclick="removePhoto('${o.id}')">Remove photo</button></div>`
-    : `<div class="full"><button class="btn btn-sm photo-btn" onclick="triggerPhoto('${o.id}')"> Add photo</button></div>`;
+    : `<div class="full"><button class="btn btn-sm photo-btn" onclick="triggerPhoto('${o.id}')">📷 Add photo</button></div>`;
   return `<div class="obs-card" id="${o.id}">
     <div class="obs-hdr"><span class="obs-lbl">${o.type.charAt(0).toUpperCase()+o.type.slice(1)}</span><button class="obs-rm" onclick="removeObs('${o.id}')">×</button></div>
     <div class="ogrid">
@@ -787,6 +832,7 @@ function obsCard(o, fields) {
     </div>
   </div>`;
 }
+
 function weedFields(o) {
   const so = WEEDS.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
   return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— species —</option>${so}</select></div>
@@ -794,6 +840,7 @@ function weedFields(o) {
     <div><label class="fl" style="font-size:12px">Growth stage</label><select onchange="obsSet('${o.id}','growth_stage',this.value)"><option>—</option><option>Cotyledon</option><option>1-leaf</option><option>2-leaf</option><option>3-leaf</option><option>4-leaf</option><option>5-leaf+</option><option>Flowering</option><option>Seed set</option></select></div>
     <div class="full"><label class="fl" style="font-size:12px">Distribution</label><select onchange="obsSet('${o.id}','distribution',this.value)"><option>—</option><option>Uniform</option><option>Patches</option><option>Field edges</option><option>Low spots</option><option>Isolated plants</option></select></div>`;
 }
+
 function insectFields(o) {
   const so = INSECTS.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
   return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— species —</option>${so}</select></div>
@@ -801,6 +848,7 @@ function insectFields(o) {
     <div><label class="fl" style="font-size:12px">Method</label><select onchange="obsSet('${o.id}','count_unit',this.value)"><option>—</option><option>per plant</option><option>per 100 sweeps</option><option>per row ft</option><option>presence / absence</option></select></div>
     <div class="full"><label class="fl" style="font-size:12px">% plants infested</label><input type="number" min="0" max="100" placeholder="0–100" value="${o.pct_affected}" oninput="obsSet('${o.id}','pct_affected',this.value)"></div>`;
 }
+
 function diseaseFields(o) {
   const dList = DISEASES[o.crop] || DISEASES.corn;
   const so = dList.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
@@ -809,6 +857,7 @@ function diseaseFields(o) {
     <div><label class="fl" style="font-size:12px">Severity (1–9)</label><input type="number" min="1" max="9" placeholder="1–9" value="${o.severity}" oninput="obsSet('${o.id}','severity',this.value)"></div>
     <div class="full"><label class="fl" style="font-size:12px">Tissue level</label><select onchange="obsSet('${o.id}','tissue',this.value)"><option>—</option><option>Lower canopy</option><option>Mid canopy</option><option>Upper canopy</option><option>Ear / pod</option><option>Stalk / stem</option><option>Root</option><option>Whole plant</option></select></div>`;
 }
+
 // Photo
 let currentPhotoObs = null;
 function triggerPhoto(obsId) { currentPhotoObs = obsId; const i = document.getElementById('photo-input'); i.value=''; i.click(); }
@@ -818,6 +867,7 @@ document.getElementById('photo-input').addEventListener('change', function() {
   renderObs();
 });
 function removePhoto(id) { delete state.obsPhotos[id]; renderObs(); }
+
 async function saveScout() {
   const fieldId = document.getElementById('sc-field').value;
   if (!fieldId) { toast('Select a field'); return; }
@@ -847,8 +897,8 @@ async function saveScout() {
     toast('Scouting point saved'); showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save scouting point'; }
 }
-// 
- SOIL / TISSUE / DRAIN FORMS 
+
+// ── SOIL / TISSUE / DRAIN FORMS ───────────────────────────────────────────────
 function initForm(prefix) {
   state.gps[prefix] = null;
   const dot = document.getElementById(prefix+'-gdot'), info = document.getElementById(prefix+'-ginfo');
@@ -859,8 +909,10 @@ function initForm(prefix) {
   populateFieldSelect(prefix+'-field');
   if(prefix==='ts') document.getElementById('ts-stage').innerHTML = '<option value="">— select field first —</option>';
 }
+
 function fv(id) { const el = document.getElementById(id); return el?.value?.trim()||null; }
 function fn(id) { const v = fv(id); return v ? parseFloat(v) : null; }
+
 async function saveSoil() {
   const fieldId = fv('sl-field'); if(!fieldId){toast('Select a field');return;}
   const field = state.fields.find(f=>f.id===fieldId);
@@ -879,6 +931,7 @@ async function saveSoil() {
     toast('Soil sample saved'); showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save soil sample'; }
 }
+
 async function saveTissue() {
   const fieldId = fv('ts-field'); if(!fieldId){toast('Select a field');return;}
   const field = state.fields.find(f=>f.id===fieldId);
@@ -895,6 +948,7 @@ async function saveTissue() {
     toast('Tissue sample saved'); showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save tissue sample'; }
 }
+
 async function saveDrain() {
   const fieldId = fv('dr-field'); if(!fieldId){toast('Select a field');return;}
   const field = state.fields.find(f=>f.id===fieldId);
@@ -908,9 +962,10 @@ async function saveDrain() {
     toast('Drainage observation saved'); showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save observation'; }
 }
-// 
- MAP 
+
+// ── MAP ────────────────────────────────────────────────────────────────────────
 const LAYER_VISIBLE = { scout: true, soil: true, tissue: true, drain: true };
+
 async function initMap() {
   if (!mapInstance) {
     mapboxgl.accessToken = 'pk.eyJ1Ijoia2FuZS1mZmYiLCJhIjoiY21uaHlxNXZiMDd6aTJxcHA3cjJ6b2JlMyJ9.aebCwgJwj-3Lvt6N2guIBA';
@@ -927,6 +982,7 @@ async function initMap() {
   }
   startWatchingLocation();
 }
+
 async function loadMapData() {
   mapMarkers.forEach(m => m.remove());
   mapMarkers = [];
@@ -938,13 +994,14 @@ async function loadMapData() {
       sb.get('drainage_obs'),
       sb.get('observations', 'select=scout_point_id,threshold,species')
     ]);
+
     if (LAYER_VISIBLE.scout) {
       (scouts||[]).filter(p => p.gps_lat).forEach(p => {
         const obs = (allObs||[]).filter(o => o.scout_point_id === p.id);
         const hasAbove = obs.some(o => o.threshold === 'above');
         const hasAt = obs.some(o => o.threshold === 'at');
         const color = hasAbove ? '#A32D2D' : hasAt ? '#BA7517' : '#1D9E75';
-        const el = makeMarkerEl(color, ' ', 'scout');
+        const el = makeMarkerEl(color, '🔍', 'scout');
         const marker = new mapboxgl.Marker({element:el}).setLngLat([p.gps_lng, p.gps_lat]).addTo(mapInstance);
         el.addEventListener('click', () => showMapCard('scout', p, obs));
         mapMarkers.push(marker);
@@ -952,7 +1009,7 @@ async function loadMapData() {
     }
     if (LAYER_VISIBLE.soil) {
       (soils||[]).filter(s => s.gps_lat).forEach(s => {
-        const el = makeMarkerEl('#BA7517', ' ', 'soil');
+        const el = makeMarkerEl('#BA7517', '🧪', 'soil');
         const marker = new mapboxgl.Marker({element:el}).setLngLat([s.gps_lng, s.gps_lat]).addTo(mapInstance);
         el.addEventListener('click', () => showMapCard('soil', s));
         mapMarkers.push(marker);
@@ -960,7 +1017,7 @@ async function loadMapData() {
     }
     if (LAYER_VISIBLE.tissue) {
       (tissues||[]).filter(t => t.gps_lat).forEach(t => {
-        const el = makeMarkerEl('#1D9E75', ' ', 'tissue');
+        const el = makeMarkerEl('#1D9E75', '🌿', 'tissue');
         const marker = new mapboxgl.Marker({element:el}).setLngLat([t.gps_lng, t.gps_lat]).addTo(mapInstance);
         el.addEventListener('click', () => showMapCard('tissue', t));
         mapMarkers.push(marker);
@@ -968,12 +1025,13 @@ async function loadMapData() {
     }
     if (LAYER_VISIBLE.drain) {
       (drains||[]).filter(d => d.gps_lat).forEach(d => {
-        const el = makeMarkerEl('#185FA5', ' ', 'drain');
+        const el = makeMarkerEl('#185FA5', '💧', 'drain');
         const marker = new mapboxgl.Marker({element:el}).setLngLat([d.gps_lng, d.gps_lat]).addTo(mapInstance);
         el.addEventListener('click', () => showMapCard('drain', d));
         mapMarkers.push(marker);
       });
     }
+
     const allPts = [...(scouts||[]),...(soils||[]),...(tissues||[]),...(drains||[])].filter(p=>p.gps_lat);
     if (allPts.length > 0) {
       const bounds = allPts.reduce((b,p) => b.extend([p.gps_lng, p.gps_lat]), new mapboxgl.LngLatBounds([allPts[0].gps_lng, allPts[0].gps_lat],[allPts[0].gps_lng, allPts[0].gps_lat]));
@@ -981,29 +1039,34 @@ async function loadMapData() {
     }
   } catch(e) { toast('Could not load map data'); }
 }
+
 function makeMarkerEl(color, icon, type) {
   const el = document.createElement('div');
   el.style.cssText = `width:34px;height:34px;border-radius:50%;background:${color};border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)`;
   el.textContent = icon;
   return el;
 }
+
 function toggleLayer(type, btn) {
   LAYER_VISIBLE[type] = !LAYER_VISIBLE[type];
   btn.classList.toggle('on', LAYER_VISIBLE[type]);
   loadMapData();
 }
+
 function showMapCard(type, data, obs) {
   const card = document.getElementById('map-card');
   const content = document.getElementById('map-card-content');
   const typeLabels = {scout:'Scouting point', soil:'Soil sample', tissue:'Tissue sample', drain:'Drainage observation'};
+
   let rows = `<div class="mbc-type">${typeLabels[type]||type}</div>
     <div class="mbc-title">${data.field_name||'Unknown field'}</div>
     <div class="mbc-sub">${data.date||''} · ${data.gps_lat ? data.gps_lat.toFixed(5)+', '+data.gps_lng.toFixed(5) : 'No GPS'}</div>`;
+
   if (type === 'scout') {
     if (data.growth_stage) rows += row('Growth stage', data.growth_stage);
     if (data.stand_count) rows += row('Stand count', data.stand_count.toLocaleString()+' plants/ac');
     (obs||[]).filter(o=>o.species).forEach(o => {
-      const flag = o.threshold === 'above' ? ' ' : o.threshold === 'at' ? ' ' : '';
+      const flag = o.threshold === 'above' ? ' ⚑' : o.threshold === 'at' ? ' ⚐' : '';
       rows += row(o.species, o.threshold ? o.threshold+' threshold'+flag : '—');
     });
   }
@@ -1029,12 +1092,15 @@ function showMapCard(type, data, obs) {
     if (data.water_table_depth != null) rows += row('Water table', data.water_table_depth+'"');
     if (data.tile_condition) rows += row('Tile condition', data.tile_condition);
   }
-}
   if (data.notes) rows += row('Notes', data.notes);
+
   content.innerHTML = rows;
   card.classList.add('open');
+}
+
 function row(k, v) { return `<div class="mbc-row"><span class="mbc-k">${k}</span><span class="mbc-v">${v}</span></div>`; }
 function closeMapCard() { document.getElementById('map-card').classList.remove('open'); }
+
 function startWatchingLocation() {
   if (watchId) return;
   if (!navigator.geolocation) return;
@@ -1049,18 +1115,20 @@ function startWatchingLocation() {
     }
   }, null, {enableHighAccuracy:true, maximumAge:5000});
 }
+
 function locateMe() {
   if (!mapInstance || !userMarker) { toast('Getting location...'); return; }
   mapInstance.flyTo({ center: userMarker.getLngLat(), zoom: 16, speed: 1.5 });
 }
-// 
- LOG 
+
+// ── LOG ────────────────────────────────────────────────────────────────────────
 function setLogTab(tab, el) {
   logTab = tab;
   document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   renderLog();
 }
+
 async function renderLog() {
   const el = document.getElementById('log-list');
   el.innerHTML = '<div class="empty">Loading...</div>';
@@ -1095,7 +1163,7 @@ async function renderLog() {
       let tags = '';
       if (item._type === 'scout') {
         tags = (item._obs||[]).filter(o=>o.species).map(o =>
-          `<span class="ltag${o.threshold==='above'?' flag':''}">${o.species}${o.threshold==='above'?' ':''}</span>`).join('');
+          `<span class="ltag${o.threshold==='above'?' flag':''}">${o.species}${o.threshold==='above'?' ⚑':''}</span>`).join('');
         const photos = (item._obs||[]).filter(o=>o.photo_url).map(o=>`<img style="width:52px;height:52px;object-fit:cover;border-radius:6px" src="${o.photo_url}" loading="lazy">`).join('');
         if (photos) tags += `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">${photos}</div>`;
       }
@@ -1111,8 +1179,8 @@ async function renderLog() {
     }).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Could not load log</div>'; }
 }
-// 
- EXPORT 
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
 async function exportCSV() {
   toast('Building export...');
   try {
@@ -1137,13 +1205,14 @@ async function exportCSV() {
     toast('Export downloaded');
   } catch(e) { toast('Export failed'); }
 }
-// 
- JOHN DEERE INTEGRATION 
+
+// ── JOHN DEERE INTEGRATION ────────────────────────────────────────────────────
 const JD_CLIENT_ID = '0oau9sokmtlHdGUC15d7';
 const JD_REDIRECT_URI = 'https://willowy-faloodeh-897608.netlify.app/callback';
 const JD_BASE = 'https://sandboxapi.deere.com/platform';
 const JD_AUTH_URL = 'https://signin.johndeere.com/oauth2/aus78tnlaysMraFhC1t7/v1/authorize';
 const JD_SCOPES = 'ag1 ag2 ag3 eq1 eq2 org1 org2 files offline_access openid';
+
 async function jdConnect() {
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -1156,17 +1225,20 @@ async function jdConnect() {
   });
   window.location.href = `${JD_AUTH_URL}?${params.toString()}`;
 }
+
 function generateCodeVerifier() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   return btoa(String.fromCharCode(...array)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
+
 async function generateCodeChallenge(verifier) {
   const encoder = new TextEncoder();
   const data = encoder.encode(verifier);
   const digest = await crypto.subtle.digest('SHA-256', data);
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
+
 function jdDisconnect() {
   if (!confirm('Disconnect John Deere? Field data already synced will remain.')) return;
   localStorage.removeItem('jd_access_token');
@@ -1176,9 +1248,11 @@ function jdDisconnect() {
   initJDScreen();
   toast('John Deere disconnected');
 }
+
 function jdIsConnected() {
   return localStorage.getItem('jd_connected') === 'true' && !!localStorage.getItem('jd_access_token');
 }
+
 async function jdGetToken() {
   const expiry = parseInt(localStorage.getItem('jd_token_expiry') || '0');
   const now = Date.now();
@@ -1197,6 +1271,7 @@ async function jdGetToken() {
   }
   return localStorage.getItem('jd_access_token');
 }
+
 async function jdAPIAll(path, progressCallback = null) {
   let allValues = [];
   let nextPath = path;
@@ -1213,6 +1288,7 @@ async function jdAPIAll(path, progressCallback = null) {
   }
   return allValues;
 }
+
 async function jdAPI(path, method = 'GET', body = null) {
   const token = await jdGetToken();
   const res = await fetch('/.netlify/functions/jd-api', {
@@ -1228,19 +1304,21 @@ async function jdAPI(path, method = 'GET', body = null) {
     throw new Error('API error: ' + text.slice(0, 200));
   }
 }
+
 function initJDScreen() {
   const connected = jdIsConnected();
-  document.getElementById('jd-status-title').textContent = connected ? ' Connected to Operations Center' : 'Not connected';
+  document.getElementById('jd-status-title').textContent = connected ? '✅ Connected to Operations Center' : 'Not connected';
   document.getElementById('jd-status-sub').textContent = connected ? 'Tap sync to import your latest fields' : 'Connect to sync fields from Operations Center';
   document.getElementById('jd-connect-btn').style.display = connected ? 'none' : 'block';
   document.getElementById('jd-disconnect-btn').style.display = connected ? 'block' : 'none';
   document.getElementById('jd-sync-section').style.display = connected ? 'block' : 'none';
   const btn = document.getElementById('jd-home-btn');
-  if (btn) btn.textContent = connected ? ' ' : ' ';
+  if (btn) btn.textContent = connected ? '🚜✓' : '🚜';
 }
+
 async function jdSyncFields() {
   const btn = document.getElementById('jd-sync-btn');
-  btn.disabled = true; btn.textContent = ' Syncing...';
+  btn.disabled = true; btn.textContent = '⏳ Syncing...';
   const orgsEl = document.getElementById('jd-orgs-list');
   const fieldsEl = document.getElementById('jd-fields-list');
   const importAllBtn = document.getElementById('jd-import-all-btn');
@@ -1253,7 +1331,7 @@ async function jdSyncFields() {
     if (!orgs.length) { fieldsEl.innerHTML = '<div class="empty">No organizations found.</div>'; return; }
     state.jdOrgs = orgs;
     orgsEl.innerHTML = `<div class="sl" style="padding-top:4px">Organizations (${orgs.length})</div>` +
-      orgs.map(o => `<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text2)"> ${o.name}</div>`).join('');
+      orgs.map(o => `<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text2)">🏢 ${o.name}</div>`).join('');
     toast('Fetching fields...');
     let allJDFields = [];
     for (const org of orgs) {
@@ -1284,13 +1362,13 @@ async function jdSyncFields() {
         const crop = guessCropFromJD(f);
         const acres = f.area ? (f.area.value * (f.area.unit === 'ha' ? 2.471 : 1)).toFixed(1) : '';
         return `<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px">
-          <div class="ficon ${crop}">${CROP_ICONS[crop]||' '}</div>
+          <div class="ficon ${crop}">${CROP_ICONS[crop]||'🌱'}</div>
           <div style="flex:1;min-width:0">
             <div class="fname">${name}</div>
             <div class="fmeta">${f._orgName || ''}${acres ? ' · ' + acres + ' ac' : ''}</div>
           </div>
           ${alreadyImported
-            ? '<span style="font-size:12px;color:var(--text3);white-space:nowrap"> Added</span>'
+            ? '<span style="font-size:12px;color:var(--text3);white-space:nowrap">✓ Added</span>'
             : `<button class="btn btn-sm btn-p" onclick="importJDField(this,'${encodeURIComponent(JSON.stringify({name,crop,jdId,orgId:f._orgId,orgName:f._orgName,acres:parseFloat(acres)||null}))}')">Import</button>`
           }
         </div>`;
@@ -1302,14 +1380,15 @@ async function jdSyncFields() {
     toast('Sync failed — ' + e.message);
     fieldsEl.innerHTML = `<div class="empty" style="color:var(--red)">${e.message}</div>`;
   } finally {
-    btn.disabled = false; btn.textContent = ' Sync fields from Operations Center';
+    btn.disabled = false; btn.textContent = '🔄 Sync fields from Operations Center';
   }
 }
+
 async function jdImportAll() {
   const btn = document.getElementById('jd-import-all-btn');
   if (!state.jdFields || !state.jdFields.length) { toast('Run sync first'); return; }
   if (!confirm(`Import all new fields from Operations Center?`)) return;
-  btn.disabled = true; btn.textContent = ' Importing...';
+  btn.disabled = true; btn.textContent = '⏳ Importing...';
   const existingFields = await sb.get('fields');
   const existingJDIds = new Set((existingFields || []).map(f => f.jd_field_id).filter(Boolean));
   const existingNames = new Set((existingFields || []).map(f => f.name.toLowerCase()));
@@ -1323,18 +1402,18 @@ async function jdImportAll() {
     try {
       await sb.insert('fields', { name, crop, jd_field_id: jdId, jd_org_id: f._orgId, jd_org_name: f._orgName, acres });
       imported++;
-      btn.textContent = ` Importing... (${imported})`;
+      btn.textContent = `⏳ Importing... (${imported})`;
     } catch(e) { console.warn('Could not import field', name, e.message); }
   }
-}
   toast(`Imported ${imported} fields${skipped ? `, ${skipped} already existed` : ''}`);
-  btn.disabled = false; btn.textContent = '
- Import All Fields'; btn.style.display = 'none';
+  btn.disabled = false; btn.textContent = '⬇️ Import All Fields'; btn.style.display = 'none';
   jdSyncFields();
+}
+
 async function jdSyncOperations() {
   const btn = document.getElementById('jd-ops-btn');
   const progress = document.getElementById('jd-progress');
-  btn.disabled = true; btn.textContent = ' Syncing operations...';
+  btn.disabled = true; btn.textContent = '⏳ Syncing operations...';
   progress.style.display = 'block'; progress.textContent = 'Starting sync...';
   try {
     const appFields = await sb.get('fields');
@@ -1371,24 +1450,26 @@ async function jdSyncOperations() {
         }
       } catch(e) { console.warn(`Operations fetch failed for ${field.name}:`, e.message); }
     }
-    progress.textContent = ` Done — ${boundaryCount} boundaries, ${operationCount} operations synced`;
+    progress.textContent = `✅ Done — ${boundaryCount} boundaries, ${operationCount} operations synced`;
     toast(`Sync complete — ${boundaryCount} boundaries, ${operationCount} operations`);
   } catch(e) {
     toast('Sync failed — ' + e.message);
-    progress.textContent = ' ' + e.message;
+    progress.textContent = '❌ ' + e.message;
   } finally {
-    btn.disabled = false; btn.textContent = ' Sync Field Operations & Boundaries';
+    btn.disabled = false; btn.textContent = '📊 Sync Field Operations & Boundaries';
   }
 }
+
 async function importJDField(btn, encodedField) {
   btn.disabled = true; btn.textContent = '...';
   try {
     const field = JSON.parse(decodeURIComponent(encodedField));
     await sb.insert('fields', { name: field.name, crop: field.crop, jd_field_id: field.jdId, jd_org_id: field.orgId, jd_org_name: field.orgName, acres: field.acres });
-    btn.textContent = ' Added'; btn.style.background = 'var(--green-dark)';
+    btn.textContent = '✓ Added'; btn.style.background = 'var(--green-dark)';
     toast(`${field.name} added`);
   } catch(e) { btn.disabled = false; btn.textContent = 'Import'; toast('Could not import field'); }
 }
+
 function guessOperationType(op) {
   const type = (op['@type'] || op.type || op.operationType || '').toLowerCase();
   if (type.includes('plant') || type.includes('seed')) return 'planting';
@@ -1397,6 +1478,7 @@ function guessOperationType(op) {
   if (type.includes('till')) return 'tillage';
   return 'other';
 }
+
 function guessCropFromJD(field) {
   const name = (field.name || field.cropSeason || '').toLowerCase();
   if (name.includes('corn') || name.includes('maize')) return 'corn';
@@ -1408,10 +1490,12 @@ function guessCropFromJD(field) {
   if (crop.includes('wheat')) return 'wheat';
   return 'corn';
 }
-// 
- ANALYTICS 
+
+// ── ANALYTICS ────────────────────────────────────────────────────────────────
 let analyticsData = null;
+
 async function initAnalytics() { await analyticsRefresh(); }
+
 async function analyticsRefresh() {
   try {
     let allOps = [];
@@ -1436,21 +1520,23 @@ async function analyticsRefresh() {
     }
   } catch(e) { console.error('Analytics load error:', e); toast('Could not load analytics data'); }
 }
+
 function getEarliestYear(ops) {
   if (!ops || !ops.length) return '—';
   const years = ops.map(o => o.start_date ? new Date(o.start_date).getFullYear() : 9999).filter(y => y < 9999);
   return years.length ? Math.min(...years) : '—';
 }
+
 function renderAnalyticsStats(data) {
   const { ops } = data;
   const byType = {};
   ops.forEach(o => { byType[o.operation_type] = (byType[o.operation_type] || 0) + 1; });
   const el = document.getElementById('analytics-stats');
   const types = [
-    { key: 'harvest', label: 'Harvests', icon: ' ' },
-    { key: 'seeding', label: 'Seeding passes', icon: ' ' },
-    { key: 'application', label: 'Applications', icon: ' ' },
-    { key: 'tillage', label: 'Tillage passes', icon: ' ' }
+    { key: 'harvest', label: 'Harvests', icon: '🌽' },
+    { key: 'seeding', label: 'Seeding passes', icon: '🌱' },
+    { key: 'application', label: 'Applications', icon: '💧' },
+    { key: 'tillage', label: 'Tillage passes', icon: '🚜' }
   ];
   el.innerHTML = types.map(t => `
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;text-align:center">
@@ -1459,6 +1545,7 @@ function renderAnalyticsStats(data) {
       <div style="font-size:12px;color:var(--text2)">${t.label}</div>
     </div>`).join('');
 }
+
 function renderYearChart(data) {
   const { ops } = data;
   const byYear = {};
@@ -1500,6 +1587,7 @@ function renderYearChart(data) {
       <span style="font-size:11px;color:var(--text2)"><span style="display:inline-block;width:10px;height:10px;background:#999;border-radius:2px;margin-right:4px"></span>Tillage</span>
     </div></div></div>`;
 }
+
 function renderFieldChart(data) {
   const { ops } = data;
   const byField = {};
@@ -1517,14 +1605,15 @@ function renderFieldChart(data) {
       <div style="font-size:12px;color:var(--text2);width:28px;text-align:right">${count}</div>
     </div>`).join('');
 }
+
 function renderRecentOps(data) {
   const { ops } = data;
   const sorted = [...ops].filter(o => o.start_date).sort((a,b) => new Date(b.start_date) - new Date(a.start_date)).slice(0, 20);
   const el = document.getElementById('analytics-recent');
-  const typeIcons = { harvest:' ', seeding:' ', application:' ', tillage:' ', other:' ' };
+  const typeIcons = { harvest:'🌽', seeding:'🌱', application:'💧', tillage:'🚜', other:'📋' };
   el.innerHTML = sorted.map(o => {
     const date = new Date(o.start_date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-    const icon = typeIcons[o.operation_type] || ' ';
+    const icon = typeIcons[o.operation_type] || '📋';
     const detail = o.variety || o.product || o.crop || o.operation_type;
     return `<div style="display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:10px">
       <div style="font-size:20px">${icon}</div>
@@ -1535,8 +1624,8 @@ function renderRecentOps(data) {
     </div>`;
   }).join('');
 }
-// 
- AI CHAT 
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
 function addAIMessage(role, text) {
   const el = document.getElementById('ai-messages');
   const isUser = role === 'user';
@@ -1550,7 +1639,9 @@ function addAIMessage(role, text) {
   el.appendChild(div);
   el.scrollTop = el.scrollHeight;
 }
+
 function askAIQuick(q) { document.getElementById('ai-input').value = q; askAI(); }
+
 async function askAI() {
   const input = document.getElementById('ai-input');
   const btn = document.getElementById('ai-btn');
@@ -1595,11 +1686,11 @@ Answer the user's question concisely and agronomically. Use specific numbers fro
   } catch(e) { addAIMessage('assistant', 'Error: ' + e.message); }
   finally { btn.disabled = false; btn.textContent = 'Ask'; }
 }
-// 
- SERVICE WORKER 
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-// 
- INIT 
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
 if (localStorage.getItem('fs_token')) {
   showScreen('screen-home');
 } else {
