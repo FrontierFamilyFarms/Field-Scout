@@ -555,7 +555,8 @@ async function authSubmit() {
   errEl.classList.remove('show');
   if (!email || !pw) { errEl.textContent = 'Enter email and password'; errEl.classList.add('show'); return; }
   const btn = document.getElementById('auth-btn');
-  btn.disabled = true; btn.textContent = 'Please wait...';
+  btn.disabled = true; btn.textContent = 'Connecting...';
+  errEl.textContent = 'Trying to connect to server...'; errEl.classList.add('show'); errEl.style.background='var(--blue-bg)'; errEl.style.color='var(--blue)';
   try {
     const data = authMode === 'signin' ? await sb.signIn(email, pw) : await sb.signUp(email, pw);
     if (data.access_token) {
