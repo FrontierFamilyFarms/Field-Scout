@@ -894,7 +894,7 @@ async function saveScout() {
         distribution: o.distribution||null, threshold: o.threshold||null, photo_url: photoUrl
       });
     }
-    toast('Scouting point saved'); showScreen('screen-home');
+    toast('Scouting point saved');  btn.disabled = false;  btn.textContent = 'Save scouting point'; showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save scouting point'; }
 }
 
