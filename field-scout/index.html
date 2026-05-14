@@ -541,7 +541,7 @@ const sb = {
   async delete(table, id) { return this.req('DELETE', `/rest/v1/${table}?id=eq.${id}`); },
   async signUp(email, pw) { return this.req('POST', '/auth/v1/signup', { email, password: pw }); },
   async signIn(email, pw) { return this.req('POST', '/auth/v1/token?grant_type=password', { email, password: pw }); },
-  async uploadPhoto(file, path) {
+ async uploadPhoto(file, path) {
     setSyncDot('sync');
     const compressed = await compressImage(file);
     const res = await fetch(`${SB_URL}/storage/v1/object/scout-photos/${path}`, {
@@ -549,7 +549,8 @@ const sb = {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'image/jpeg' },
       body: compressed
     });
-    if (!res.ok) throw new Error('Photo upload failed');
+    const resText = await res.text();
+    if (!res.ok) throw new Error('Upload failed: ' + resText);
     setSyncDot('ok');
     return `${SB_URL}/storage/v1/object/public/scout-photos/${path}`;
   }
