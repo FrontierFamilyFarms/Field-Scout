@@ -170,7 +170,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="auth-err" id="auth-err"></div>
       <input type="email" id="auth-email" placeholder="Email address" autocomplete="email">
       <input type="password" id="auth-pw" placeholder="Password" autocomplete="current-password">
-      <button class="btn btn-p btn-w" id="auth-btn" onclick="authSubmit()">Sign in</button>
+      <button class="btn btn-p btn-w" id="auth-btn" onclick="authSubmit()" ontouchend="authSubmit()">Sign in</button>
     </div>
     <div class="auth-switch">Don't have an account? <span onclick="toggleAuth()">Create one</span></div>
   </div>
