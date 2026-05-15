@@ -1181,7 +1181,7 @@ async function renderLog() {
       if (item._type === 'tissue') tags = `<span class="ltag tissue">Tissue · N ${item.nitrogen||'—'}% · P ${item.phosphorus||'—'}% · K ${item.potassium||'—'}%</span>`;
       if (item._type === 'drain') tags = `<span class="ltag drain">${item.observation_type||'Drainage'}</span>`;
       return `<div class="log-item">
-        <div class="litop"><span class="lifn">${item.field_name}</span><span class="lidate">${item.date}</span></div>
+        <div class="litop"><span class="lifn">${item.field_name}</span><span class="lidate">${item.date}</span><button onclick="deleteEntry('${item._type}','${item.id}',event)" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:0 4px;line-height:1">×</button></div>
         <div class="ligps">${gps}${item.growth_stage?' · '+item.growth_stage:''}</div>
         ${tags ? `<div class="litags">${tags}</div>` : ''}
         ${item.notes ? `<div class="linote">${item.notes}</div>` : ''}
@@ -1189,7 +1189,16 @@ async function renderLog() {
     }).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Could not load log</div>'; }
 }
-
+async function deleteEntry(type, id, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this entry?')) return;
+  const tables = { scout: 'scout_points', soil: 'soil_samples', tissue: 'tissue_samples', drain: 'drainage_obs' };
+  try {
+    await sb.delete(tables[type], id);
+    toast('Entry deleted');
+    renderLog();
+  } catch(e) { toast('Could not delete'); }
+}
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 async function exportCSV() {
   toast('Building export...');
