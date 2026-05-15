@@ -305,6 +305,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <button class="aob" onclick="addObs('weed')">+ Weed</button>
       <button class="aob" onclick="addObs('insect')">+ Insect</button>
       <button class="aob" onclick="addObs('disease')">+ Disease</button>
+      <button class="aob" onclick="addObs('photo')">📷 Crop photo</button>
     </div>
     <div class="fg"><label class="fl">Notes</label><textarea id="sc-notes" placeholder="Field conditions, anything notable..."></textarea></div>
     <div style="padding:16px 16px 32px"><button class="btn btn-p btn-w" id="sc-save" onclick="saveScout()">Save scouting point</button></div>
@@ -505,7 +506,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
   </div>
 </div>
-
+<div class="screen" id="screen-scout-detail">
+  <div class="topbar">
+    <button class="back" onclick="showScreen('screen-log')">&#8592;</button>
+    <h2 id="detail-title">Scouting point</h2>
+  </div>
+  <div class="scroll" id="detail-content"></div>
+</div>
 <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script>
@@ -810,6 +817,8 @@ function renderObs() {
     if (o.type === 'weed') return obsCard(o, weedFields(o));
     if (o.type === 'insect') return obsCard(o, insectFields(o));
     if (o.type === 'disease') return obsCard(o, diseaseFields(o));
+   if (o.type === 'photo') return obsCard(o, photoFields(o));
+    return '';
     return '';
   }).join('');
 }
@@ -853,6 +862,7 @@ function insectFields(o) {
 }
 
 function diseaseFields(o) {
+  return `<div class="full"><label class="fl" style="font-size:12px">Note</label><input type="text" placeholder="What are you photographing?" value="${o.species||''}" oninput="obsSet('${o.id}','species',this.value)"></div>`;
   const dList = DISEASES[o.crop] || DISEASES.corn;
   const so = dList.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
   return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— disease —</option>${so}</select></div>
@@ -1180,7 +1190,7 @@ async function renderLog() {
       if (item._type === 'soil') tags = `<span class="ltag soil">Soil · pH ${item.ph||'—'} · P ${item.phosphorus||'—'} · K ${item.potassium||'—'}</span>`;
       if (item._type === 'tissue') tags = `<span class="ltag tissue">Tissue · N ${item.nitrogen||'—'}% · P ${item.phosphorus||'—'}% · K ${item.potassium||'—'}%</span>`;
       if (item._type === 'drain') tags = `<span class="ltag drain">${item.observation_type||'Drainage'}</span>`;
-      return `<div class="log-item">
+      return `<div class="log-item" onclick="${item._type==='scout' ? `openScoutDetail('${item.id}')` : ''}">
         <div class="litop"><span class="lifn">${item.field_name}</span><span class="lidate">${item.date}</span><button onclick="deleteEntry('${item._type}','${item.id}',event)" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:0 4px;line-height:1">×</button></div>
         <div class="ligps">${gps}${item.growth_stage?' · '+item.growth_stage:''}</div>
         ${tags ? `<div class="litags">${tags}</div>` : ''}
@@ -1189,6 +1199,47 @@ async function renderLog() {
     }).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Could not load log</div>'; }
 }
+ async function openScoutDetail(id) {
+  try {
+    const [points, obs] = await Promise.all([
+      sb.get('scout_points', `id=eq.${id}`),
+      sb.get('observations', `scout_point_id=eq.${id}`)
+    ]);
+    const p = points[0]; if (!p) return;
+    document.getElementById('detail-title').textContent = p.field_name;
+    const thrColors = { below: 'var(--green-dark)', at: 'var(--amber)', above: 'var(--red)' };
+    const thrBgs = { below: 'var(--green-light)', at: 'var(--amber-bg)', above: 'var(--red-bg)' };
+    let html = `
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg2)">
+        <div style="font-size:13px;color:var(--text2)">${p.date} · ${p.gps_lat ? p.gps_lat.toFixed(5)+', '+p.gps_lng.toFixed(5) : 'No GPS'}</div>
+        ${p.growth_stage ? `<div style="font-size:14px;font-weight:600;margin-top:4px">Growth stage: ${p.growth_stage}</div>` : ''}
+        ${p.stand_count ? `<div style="font-size:14px;margin-top:2px">Stand count: ${p.stand_count.toLocaleString()} plants/ac</div>` : ''}
+        ${p.notes ? `<div style="font-size:14px;margin-top:8px;color:var(--text2);line-height:1.5">${p.notes}</div>` : ''}
+      </div>`;
+    if (obs && obs.length) {
+      html += `<div class="sl">Observations (${obs.length})</div>`;
+      obs.forEach(o => {
+        const thr = o.threshold;
+        html += `<div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:14px;font-weight:600;color:var(--text)">${o.species || o.type}</span>
+            ${thr ? `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${thrBgs[thr]};color:${thrColors[thr]}">${thr} threshold${thr==='above'?' ⚑':''}</span>` : ''}
+          </div>
+          ${o.count ? `<div style="font-size:13px;color:var(--text2)">Count: ${o.count}${o.count_unit?' '+o.count_unit:''}</div>` : ''}
+          ${o.pct_affected ? `<div style="font-size:13px;color:var(--text2)">% affected: ${o.pct_affected}%</div>` : ''}
+          ${o.severity ? `<div style="font-size:13px;color:var(--text2)">Severity: ${o.severity}/9</div>` : ''}
+          ${o.distribution ? `<div style="font-size:13px;color:var(--text2)">Distribution: ${o.distribution}</div>` : ''}
+          ${o.growth_stage ? `<div style="font-size:13px;color:var(--text2)">Stage: ${o.growth_stage}</div>` : ''}
+          ${o.photo_url ? `<img src="${o.photo_url}" onclick="viewPhoto('${o.photo_url}')" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer">` : ''}
+        </div>`;
+      });
+    } else {
+      html += `<div class="empty">No observations recorded</div>`;
+    }
+    document.getElementById('detail-content').innerHTML = html;
+    showScreen('screen-scout-detail');
+  } catch(e) { toast('Could not load detail'); }
+} 
 async function deleteEntry(type, id, e) {
   e.stopPropagation();
   if (!confirm('Delete this entry?')) return;
