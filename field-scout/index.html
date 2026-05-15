@@ -1180,7 +1180,6 @@ async function renderLog() {
        const photos = (item._obs||[]).filter(o=>o.photo_url).map(o=>`<img style="width:52px;height:52px;object-fit:cover;border-radius:6px;cursor:pointer" src="${o.photo_url}" loading="lazy" onclick="viewPhoto('${o.photo_url}')">`).join('');
         if (photos) tags += `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">${photos}</div>`;
       }
-    
 }
       if (item._type === 'soil') tags = `<span class="ltag soil">Soil · pH ${item.ph||'—'} · P ${item.phosphorus||'—'} · K ${item.potassium||'—'}</span>`;
       if (item._type === 'tissue') tags = `<span class="ltag tissue">Tissue · N ${item.nitrogen||'—'}% · P ${item.phosphorus||'—'}% · K ${item.potassium||'—'}%</span>`;
