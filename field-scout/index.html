@@ -15,7 +15,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;background:#f5f5f5;color:#1a1a1a;overflow:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 :root{--green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--amber:#BA7517;--amber-bg:#FAEEDA;--red:#A32D2D;--red-bg:#FCEBEB;--blue:#185FA5;--blue-bg:#E6F1FB;--border:#e0e0e0;--bg:#fff;--bg2:#f8f8f8;--text:#1a1a1a;--text2:#666;--text3:#999;--r:12px;--rsm:8px}
-.app{max-width:520px;margin:0 auto;height:100%;min-height:100vh;max-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
+.app{max-width:520px;margin:0 auto;height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden}
 .screen{display:none;flex-direction:column;height:100%;overflow:hidden;position:absolute;inset:0;background:var(--bg);z-index:1}
 .screen.active{display:flex;z-index:2}
 .topbar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;min-height:54px;position:relative;z-index:10}
@@ -189,7 +189,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 <!-- ===== HOME ===== -->
 <div class="screen" id="screen-home">
- <div class="topbar">
+  <div class="topbar">
     <h1>Field Scout</h1>
     <div class="sdot" id="sdot"></div>
     <button class="ibtn" onclick="showScreen('screen-map')">Map</button>
@@ -219,7 +219,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-scout-setup')">🔍 Scouting point</button>
     <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-soil-setup')">🧪 Soil sample</button>
     <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-tissue-setup')">🌿 Tissue sample</button>
-    <button class="btn btn-w" style="justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-drain-setup')">💧 Drainage observation</button>
+    <button class="btn btn-w" style="margin-bottom:6px;justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-drain-setup')">💧 Drainage observation</button>
+    <button class="btn btn-w" style="justify-content:flex-start" onclick="hideAddMenu();showScreen('screen-log')">📋 View log</button>
   </div>
 </div>
 
@@ -506,6 +507,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
   </div>
 </div>
+
+<!-- ===== SCOUT DETAIL ===== -->
 <div class="screen" id="screen-scout-detail">
   <div class="topbar">
     <button class="back" onclick="showScreen('screen-log')">&#8592;</button>
@@ -513,6 +516,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   </div>
   <div class="scroll" id="detail-content"></div>
 </div>
+
 <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script>
@@ -549,7 +553,7 @@ const sb = {
   async delete(table, id) { return this.req('DELETE', `/rest/v1/${table}?id=eq.${id}`); },
   async signUp(email, pw) { return this.req('POST', '/auth/v1/signup', { email, password: pw }); },
   async signIn(email, pw) { return this.req('POST', '/auth/v1/token?grant_type=password', { email, password: pw }); },
- async uploadPhoto(file, path) {
+  async uploadPhoto(file, path) {
     setSyncDot('sync');
     const compressed = await compressImage(file);
     const res = await fetch(`${SB_URL}/storage/v1/object/scout-photos/${path}`, {
@@ -557,8 +561,7 @@ const sb = {
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'image/jpeg' },
       body: compressed
     });
-    const resText = await res.text();
-    if (!res.ok) throw new Error('Upload failed: ' + resText);
+    if (!res.ok) throw new Error('Photo upload failed');
     setSyncDot('ok');
     return `${SB_URL}/storage/v1/object/public/scout-photos/${path}`;
   }
@@ -817,8 +820,7 @@ function renderObs() {
     if (o.type === 'weed') return obsCard(o, weedFields(o));
     if (o.type === 'insect') return obsCard(o, insectFields(o));
     if (o.type === 'disease') return obsCard(o, diseaseFields(o));
-   if (o.type === 'photo') return obsCard(o, photoFields(o));
-    return '';
+    if (o.type === 'photo') return obsCardPhoto(o);
     return '';
   }).join('');
 }
@@ -862,13 +864,24 @@ function insectFields(o) {
 }
 
 function diseaseFields(o) {
-  return `<div class="full"><label class="fl" style="font-size:12px">Note</label><input type="text" placeholder="What are you photographing?" value="${o.species||''}" oninput="obsSet('${o.id}','species',this.value)"></div>`;
   const dList = DISEASES[o.crop] || DISEASES.corn;
   const so = dList.map(s => `<option${o.species===s?' selected':''}>${s}</option>`).join('');
   return `<div class="full"><select onchange="obsSet('${o.id}','species',this.value)"><option value="">— disease —</option>${so}</select></div>
     <div><label class="fl" style="font-size:12px">% incidence</label><input type="number" min="0" max="100" placeholder="0–100" value="${o.pct_affected}" oninput="obsSet('${o.id}','pct_affected',this.value)"></div>
     <div><label class="fl" style="font-size:12px">Severity (1–9)</label><input type="number" min="1" max="9" placeholder="1–9" value="${o.severity}" oninput="obsSet('${o.id}','severity',this.value)"></div>
     <div class="full"><label class="fl" style="font-size:12px">Tissue level</label><select onchange="obsSet('${o.id}','tissue',this.value)"><option>—</option><option>Lower canopy</option><option>Mid canopy</option><option>Upper canopy</option><option>Ear / pod</option><option>Stalk / stem</option><option>Root</option><option>Whole plant</option></select></div>`;
+}
+
+function obsCardPhoto(o) {
+  const p = state.obsPhotos[o.id];
+  const photoHtml = p?.previewUrl
+    ? `<img class="photo-preview" src="${p.previewUrl}" onclick="viewPhoto('${p.previewUrl}')"><button class="photo-rm" onclick="removePhoto('${o.id}')">Remove photo</button>`
+    : `<button class="btn btn-sm photo-btn" onclick="triggerPhoto('${o.id}')">📷 Take crop photo</button>`;
+  return `<div class="obs-card" id="${o.id}">
+    <div class="obs-hdr"><span class="obs-lbl">Crop photo</span><button class="obs-rm" onclick="removeObs('${o.id}')">×</button></div>
+    <div style="margin-bottom:8px"><input type="text" placeholder="Note (optional)" value="${o.species||''}" oninput="obsSet('${o.id}','species',this.value)"></div>
+    ${photoHtml}
+  </div>`;
 }
 
 // Photo
@@ -898,7 +911,7 @@ async function saveScout() {
     for (const o of state.obs) {
       let photoUrl = null;
       const pd = state.obsPhotos[o.id];
-      if (pd?.file) { try { photoUrl = await sb.uploadPhoto(pd.file, `${point.id}/${o.id}_${Date.now()}.jpg`); } catch(e){ toast('Photo upload failed: ' + e.message); } }
+      if (pd?.file) { try { photoUrl = await sb.uploadPhoto(pd.file, `${point.id}/${o.id}_${Date.now()}.jpg`); } catch(e){} }
       await sb.insert('observations', {
         scout_point_id: point.id, type: o.type, species: o.species||null,
         count: o.count ? parseFloat(o.count) : null, count_unit: o.count_unit||null,
@@ -907,7 +920,10 @@ async function saveScout() {
         distribution: o.distribution||null, threshold: o.threshold||null, photo_url: photoUrl
       });
     }
-    toast('Scouting point saved');  btn.disabled = false;  btn.textContent = 'Save scouting point'; showScreen('screen-home');
+    toast('Scouting point saved');
+    btn.disabled = false;
+    btn.textContent = 'Save scouting point';
+    showScreen('screen-home');
   } catch(e) { toast('Save failed'); btn.disabled=false; btn.textContent='Save scouting point'; }
 }
 
@@ -1177,15 +1193,14 @@ async function renderLog() {
       if (item._type === 'scout') {
         tags = (item._obs||[]).filter(o=>o.species).map(o =>
           `<span class="ltag${o.threshold==='above'?' flag':''}">${o.species}${o.threshold==='above'?' ⚑':''}</span>`).join('');
-       const photos = (item._obs||[]).filter(o=>o.photo_url).map(o=>`<img style="width:52px;height:52px;object-fit:cover;border-radius:6px;cursor:pointer" src="${o.photo_url}" loading="lazy" onclick="viewPhoto('${o.photo_url}')">`).join('');
+        const photos = (item._obs||[]).filter(o=>o.photo_url).map(o=>`<img style="width:52px;height:52px;object-fit:cover;border-radius:6px" src="${o.photo_url}" loading="lazy">`).join('');
         if (photos) tags += `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">${photos}</div>`;
       }
-}
       if (item._type === 'soil') tags = `<span class="ltag soil">Soil · pH ${item.ph||'—'} · P ${item.phosphorus||'—'} · K ${item.potassium||'—'}</span>`;
       if (item._type === 'tissue') tags = `<span class="ltag tissue">Tissue · N ${item.nitrogen||'—'}% · P ${item.phosphorus||'—'}% · K ${item.potassium||'—'}%</span>`;
       if (item._type === 'drain') tags = `<span class="ltag drain">${item.observation_type||'Drainage'}</span>`;
-      return `<div class="log-item" onclick="${item._type==='scout' ? `openScoutDetail('${item.id}')` : ''}">
-        <div class="litop"><span class="lifn">${item.field_name}</span><span class="lidate">${item.date}</span><button onclick="deleteEntry('${item._type}','${item.id}',event)" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:0 4px;line-height:1">×</button></div>
+      return `<div class="log-item" onclick="${item._type==='scout' ? 'openScoutDetail(\''+item.id+'\')' : ''}">
+        <div class="litop"><span class="lifn">${item.field_name}</span><span class="lidate">${item.date}</span><button onclick="deleteEntry('${item._type}','${item.id}',event)" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:0 4px;line-height:1;flex-shrink:0">×</button></div>
         <div class="ligps">${gps}${item.growth_stage?' · '+item.growth_stage:''}</div>
         ${tags ? `<div class="litags">${tags}</div>` : ''}
         ${item.notes ? `<div class="linote">${item.notes}</div>` : ''}
@@ -1193,64 +1208,7 @@ async function renderLog() {
     }).join('');
   } catch(e) { el.innerHTML = '<div class="empty">Could not load log</div>'; }
 }
- async function openScoutDetail(id) {
-  try {
-    const [points, obs] = await Promise.all([
-      sb.get('scout_points', `id=eq.${id}`),
-      sb.get('observations', `scout_point_id=eq.${id}`)
-    ]);
-    const p = points[0]; if (!p) return;
-    document.getElementById('detail-title').textContent = p.field_name;
-    const thrColors = { below: 'var(--green-dark)', at: 'var(--amber)', above: 'var(--red)' };
-    const thrBgs = { below: 'var(--green-light)', at: 'var(--amber-bg)', above: 'var(--red-bg)' };
-    let html = `
-      <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg2)">
-        <div style="font-size:13px;color:var(--text2)">${p.date} · ${p.gps_lat ? p.gps_lat.toFixed(5)+', '+p.gps_lng.toFixed(5) : 'No GPS'}</div>
-        ${p.growth_stage ? `<div style="font-size:14px;font-weight:600;margin-top:4px">Growth stage: ${p.growth_stage}</div>` : ''}
-        ${p.stand_count ? `<div style="font-size:14px;margin-top:2px">Stand count: ${p.stand_count.toLocaleString()} plants/ac</div>` : ''}
-        ${p.notes ? `<div style="font-size:14px;margin-top:8px;color:var(--text2);line-height:1.5">${p.notes}</div>` : ''}
-      </div>`;
-    if (obs && obs.length) {
-      html += `<div class="sl">Observations (${obs.length})</div>`;
-      obs.forEach(o => {
-        const thr = o.threshold;
-        html += `<div style="padding:12px 16px;border-bottom:1px solid var(--border)">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:14px;font-weight:600;color:var(--text)">${o.species || o.type}</span>
-            ${thr ? `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${thrBgs[thr]};color:${thrColors[thr]}">${thr} threshold${thr==='above'?' ⚑':''}</span>` : ''}
-          </div>
-          ${o.count ? `<div style="font-size:13px;color:var(--text2)">Count: ${o.count}${o.count_unit?' '+o.count_unit:''}</div>` : ''}
-          ${o.pct_affected ? `<div style="font-size:13px;color:var(--text2)">% affected: ${o.pct_affected}%</div>` : ''}
-          ${o.severity ? `<div style="font-size:13px;color:var(--text2)">Severity: ${o.severity}/9</div>` : ''}
-          ${o.distribution ? `<div style="font-size:13px;color:var(--text2)">Distribution: ${o.distribution}</div>` : ''}
-          ${o.growth_stage ? `<div style="font-size:13px;color:var(--text2)">Stage: ${o.growth_stage}</div>` : ''}
-          ${o.photo_url ? `<img src="${o.photo_url}" onclick="viewPhoto('${o.photo_url}')" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer">` : ''}
-        </div>`;
-      });
-    } else {
-      html += `<div class="empty">No observations recorded</div>`;
-    }
-    document.getElementById('detail-content').innerHTML = html;
-    showScreen('screen-scout-detail');
-  } catch(e) { toast('Could not load detail'); }
-} 
-async function deleteEntry(type, id, e) {
-  e.stopPropagation();
-  if (!confirm('Delete this entry?')) return;
-  const tables = { scout: 'scout_points', soil: 'soil_samples', tissue: 'tissue_samples', drain: 'drainage_obs' };
-  try {
-    await sb.delete(tables[type], id);
-    toast('Entry deleted');
-    renderLog();
-  } catch(e) { toast('Could not delete'); }
-}
-  function viewPhoto(url) {
-const overlay = document.createElement('div');
-overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
-overlay.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px">`;
-overlay.onclick = () => overlay.remove();
-document.body.appendChild(overlay);
-}
+
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 async function exportCSV() {
   toast('Building export...');
@@ -1480,13 +1438,7 @@ async function jdImportAll() {
   btn.disabled = false; btn.textContent = '⬇️ Import All Fields'; btn.style.display = 'none';
   jdSyncFields();
 }
-function signOut() {
-  if (!confirm('Sign out?')) return;
-  localStorage.removeItem('fs_token');
-  localStorage.removeItem('fs_email');
-  authToken = SB_KEY;
-  showScreen('screen-auth');
-}
+
 async function jdSyncOperations() {
   const btn = document.getElementById('jd-ops-btn');
   const progress = document.getElementById('jd-progress');
@@ -1762,6 +1714,78 @@ Answer the user's question concisely and agronomically. Use specific numbers fro
     addAIMessage('assistant', answer);
   } catch(e) { addAIMessage('assistant', 'Error: ' + e.message); }
   finally { btn.disabled = false; btn.textContent = 'Ask'; }
+}
+
+// ── SIGN OUT ──────────────────────────────────────────────────────────────────
+function signOut() {
+  if (!confirm('Sign out?')) return;
+  localStorage.removeItem('fs_token');
+  localStorage.removeItem('fs_email');
+  authToken = SB_KEY;
+  showScreen('screen-auth');
+}
+
+// ── DELETE ENTRY ──────────────────────────────────────────────────────────────
+async function deleteEntry(type, id, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this entry?')) return;
+  const tables = { scout: 'scout_points', soil: 'soil_samples', tissue: 'tissue_samples', drain: 'drainage_obs' };
+  try {
+    await sb.delete(tables[type], id);
+    toast('Entry deleted');
+    renderLog();
+  } catch(e) { toast('Could not delete'); }
+}
+
+// ── SCOUT DETAIL ──────────────────────────────────────────────────────────────
+async function openScoutDetail(id) {
+  try {
+    const [points, obs] = await Promise.all([
+      sb.get('scout_points', 'id=eq.'+id),
+      sb.get('observations', 'scout_point_id=eq.'+id)
+    ]);
+    const p = points[0]; if (!p) return;
+    document.getElementById('detail-title').textContent = p.field_name;
+    const thrColors = { below: 'var(--green-dark)', at: 'var(--amber)', above: 'var(--red)' };
+    const thrBgs = { below: 'var(--green-light)', at: 'var(--amber-bg)', above: 'var(--red-bg)' };
+    let html = '<div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg2)">';
+    html += '<div style="font-size:13px;color:var(--text2)">' + p.date + ' · ' + (p.gps_lat ? p.gps_lat.toFixed(5)+', '+p.gps_lng.toFixed(5) : 'No GPS') + '</div>';
+    if (p.growth_stage) html += '<div style="font-size:14px;font-weight:600;margin-top:4px">Growth stage: ' + p.growth_stage + '</div>';
+    if (p.stand_count) html += '<div style="font-size:14px;margin-top:2px">Stand count: ' + p.stand_count.toLocaleString() + ' plants/ac</div>';
+    if (p.notes) html += '<div style="font-size:14px;margin-top:8px;color:var(--text2);line-height:1.5">' + p.notes + '</div>';
+    html += '</div>';
+    if (obs && obs.length) {
+      html += '<div class="sl">Observations (' + obs.length + ')</div>';
+      obs.forEach(function(o) {
+        const thr = o.threshold;
+        html += '<div style="padding:12px 16px;border-bottom:1px solid var(--border)">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
+        html += '<span style="font-size:14px;font-weight:600;color:var(--text)">' + (o.species || o.type) + '</span>';
+        if (thr) html += '<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:' + thrBgs[thr] + ';color:' + thrColors[thr] + '">' + thr + ' threshold' + (thr==='above' ? ' ⚑' : '') + '</span>';
+        html += '</div>';
+        if (o.count) html += '<div style="font-size:13px;color:var(--text2)">Count: ' + o.count + (o.count_unit ? ' '+o.count_unit : '') + '</div>';
+        if (o.pct_affected) html += '<div style="font-size:13px;color:var(--text2)">% affected: ' + o.pct_affected + '%</div>';
+        if (o.severity) html += '<div style="font-size:13px;color:var(--text2)">Severity: ' + o.severity + '/9</div>';
+        if (o.distribution) html += '<div style="font-size:13px;color:var(--text2)">Distribution: ' + o.distribution + '</div>';
+        if (o.growth_stage) html += '<div style="font-size:13px;color:var(--text2)">Stage: ' + o.growth_stage + '</div>';
+        if (o.photo_url) html += '<img src="' + o.photo_url + '" onclick="viewPhoto(\'' + o.photo_url + '\')" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer">';
+        html += '</div>';
+      });
+    } else {
+      html += '<div class="empty">No observations recorded</div>';
+    }
+    document.getElementById('detail-content').innerHTML = html;
+    showScreen('screen-scout-detail');
+  } catch(e) { toast('Could not load detail'); }
+}
+
+// ── PHOTO VIEWER ──────────────────────────────────────────────────────────────
+function viewPhoto(url) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  overlay.innerHTML = '<img src="' + url + '" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px">';
+  overlay.onclick = function() { overlay.remove(); };
+  document.body.appendChild(overlay);
 }
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
