@@ -189,14 +189,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 
 <!-- ===== HOME ===== -->
 <div class="screen" id="screen-home">
-  <div class="topbar">
+ <div class="topbar">
     <h1>Field Scout</h1>
     <div class="sdot" id="sdot"></div>
-   <button class="ibtn" onclick="showScreen('screen-map')">Map</button>
-<button class="ibtn" onclick="showScreen('screen-log')">Log</button>
-<button class="ibtn" onclick="showScreen('screen-fields')">Fields</button>
-<button class="ibtn" onclick="showScreen('screen-analytics')">📊</button>
-<button class="ibtn" onclick="showScreen('screen-jd')" id="jd-home-btn" title="John Deere">🚜</button>
+    <button class="ibtn" onclick="showScreen('screen-map')">Map</button>
+    <button class="ibtn" onclick="showScreen('screen-log')">Log</button>
+    <button class="ibtn" onclick="showScreen('screen-fields')">Fields</button>
+    <button class="ibtn" onclick="showScreen('screen-analytics')">📊</button>
+    <button class="ibtn" onclick="showScreen('screen-jd')" id="jd-home-btn" title="John Deere">🚜</button>
+    <button class="ibtn" style="color:var(--red)" onclick="signOut()">Out</button>
   </div>
   <div class="offbanner" id="offbanner2"></div>
   <div class="scroll" style="padding-bottom:80px">
@@ -1418,7 +1419,13 @@ async function jdImportAll() {
   btn.disabled = false; btn.textContent = '⬇️ Import All Fields'; btn.style.display = 'none';
   jdSyncFields();
 }
-
+function signOut() {
+  if (!confirm('Sign out?')) return;
+  localStorage.removeItem('fs_token');
+  localStorage.removeItem('fs_email');
+  authToken = SB_KEY;
+  showScreen('screen-auth');
+}
 async function jdSyncOperations() {
   const btn = document.getElementById('jd-ops-btn');
   const progress = document.getElementById('jd-progress');
